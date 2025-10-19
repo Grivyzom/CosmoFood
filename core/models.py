@@ -13,10 +13,10 @@ class Usuario(AbstractUser):
       ]
       
       telefono = models.CharField(max_length=15, blank=True, null=True )
-      direccion = models.TextField(blank=True, null=True),
-      rol = models.CharField(max_length=20, blank=True, null=True)
-      email_verificacion = models.EmailField(blank=False)
-      fecha_creacion = models.DateField(auto_now_add=True)
+      direccion = models.TextField(blank=True, null=True)
+      rol = models.CharField(max_length=20, blank=True, null=True,choices=ROLES)
+      email_verificado = models.BooleanField(default=True)
+      fecha_creacion = models.DateTimeField(auto_now_add=True)
       activo = models.BooleanField(default=True)
       
       class Meta:
@@ -35,13 +35,13 @@ class Categoria(models.Model):
       class Meta:
             verbose_name = 'Categoría'
             verbose_name_plural = 'Categorías'
-
+            ordering = ['nombre']  # ← Agregué ordenamiento
       def __str__(self):
             return self.nombre
       
 class Producto(models.Model):
-      nombre = models.CharField(max_length=100, unique=True),
-      descripcion = models.CharField(blank=True, null=True),
+      nombre = models.CharField(max_length=100, unique=True)
+      descripcion = models.CharField(max_length=500, blank=True, null=True)
       precio = models.DecimalField(max_digits=10, decimal_places= 2)
       imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
       stock = models.IntegerField(default=0)
