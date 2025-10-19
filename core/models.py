@@ -7,7 +7,7 @@ class Usuario(AbstractUser):
             ('cliente', 'Cliente'),
             ('administrador', 'Administrador'),
             ('cajero', 'Cajero'),
-            ('repatidor', 'Repatidor'),
+            ('repartidor', 'Repartidor'),
             ('cocina', 'Cocina'),
             
       ]
@@ -74,3 +74,60 @@ class Repartidor(models.Model):
     
     def __str__(self):
         return f"{self.usuario.get_full_name()} - {'Disponible' if self.disponible else 'No disponible'}"
+  
+  
+class Carrito(models.Model):
+      usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name="carrito")
+      fecha_creacion = models.DateTimeField(auto_now_add=True)
+      fecha_actualizacion = models.DateTimeField(auto_now=True)
+      class Meta:
+            verbose_name = 'Carrito'
+            verbose_name_plural = 'Carritos'
+            
+      def __str__(self):
+            return f"Carrito de {self.usuario.username}"
+      
+      @property
+      def total_items(self): 
+            return sum(item.cantidad for item in self.items.all())
+      
+      @property
+      def total_precio(self):
+            return sum(item.subtotal for item in self.items.all())
+
+class ItemCarrito(models.Model):
+      carrito = models. ForeignKey(Carrito, on_delete=models.CASCADE, related_name="items")
+      producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+      cantidad = models.PositiveIntegerField(default=1)
+      fecha_agregado = models.DateTimeField(auto_now_add=True)
+
+      class Meta:
+            verbose_name = [ 'Item del Carrito']
+            verbose_name_plural = ['Items del Carrito']
+            unique_together = ['carrito', 'producto']
+      def __str__(self):
+            return f"{self.cantidad} x {self.producto.nombre}"
+      
+      @property
+      def subtotal(self):
+            return self.producto.precio * self.cantidad
+      
+class MetodoPago(models.Model):
+      """Metodos de pagos disponibles"""
+      TIPO_CHOICES = [
+            ('efectivo', 'Efectivo'),
+            ('tarjeta', 'Tarjeta'),
+            ('transferencia', 'Transferencia'),
+            ('webpay', 'Webpay'),
+      ]
+      
+      nombre = models.CharField(max_length=50)
+      tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+      activo = models.BooleanField(default=True)
+      
+      class Meta:
+            verbose_name = 'Método de Pago'
+            verbose_name_plural = 'Métodos de Pago'
+            
+      def __str__(self):
+            return self.nombre

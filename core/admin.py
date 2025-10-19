@@ -30,4 +30,4 @@ class ProductoAdmin(admin.ModelAdmin):
 class RepatidorAdmin(admin.ModelAdmin):
       list_display = ['usuario', 'vehiculo', 'disponible', 'calificacion_promedio']
       list_filter = ['disponible']
-      search_fields = ['usuario_username', 'usuario__first_name', 'usuario__last_name']
+      search_fields = ['usuario__username', 'usuario__first_name', 'usuario__last_name']
