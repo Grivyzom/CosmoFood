@@ -206,7 +206,7 @@ class Pedido(models.Model):
                   import string
                   
                   self.numero_pedido = ''.join(random.choices(string.digits, k=8))
-            super().save(*args)
+            super().save(*args, **kwargs)
             
 class DetallePedido(models.Model):
       pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='detalles')
@@ -234,7 +234,7 @@ class Reclamo(models.Model):
             ('otro', 'Otro'),
       ]
       
-      ESTADO_CHOIDES = [
+      ESTADO_CHOICES = [
             ('nuevo', 'Nuevo'),
             ('en_revision', 'En Revisión'),
             ('respondido', 'Respondido'),
@@ -246,11 +246,11 @@ class Reclamo(models.Model):
       pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
       
       motivo = models.CharField(max_length=20, choices=MOTIVO_CHOICES,)
-      despcripcion = models.TextField()
-      estado = models.CharField(max_length=20, choices=ESTADO_CHOIDES, default='Nuevo')
+      descripcion = models.TextField()
+      estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='nuevo')
       
       respuesta = models.TextField(blank=True, null=True)
-      atendido = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='reclamos_atendidos')
+      atendido_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='reclamos_atendidos')
       
       fecha_creacion = models.DateTimeField(auto_now_add=True)
       fecha_respuesta = models.DateTimeField(null=True, blank=True)
