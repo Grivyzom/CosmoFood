@@ -156,8 +156,12 @@ class PerfilForm(forms.ModelForm):
         
 class RecuperarPasswordForm(forms.Form):
     email = forms.EmailField(
-        label = 'Correo Electrónico',
-        widget= forms.EmailInput(attrs={'class': 'form-control'})
+        label='Correo Electrónico',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'tucorreo@ejemplo.com'
+        }),
+        help_text='Ingresa el correo con el que te registraste'
     )
 
 class ResetPasswordForm(forms.Form):

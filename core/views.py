@@ -4,8 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.contrib import messages
-from .forms import RegistroForm, LoginForm, PerfilForm, ProductoForm
-from .models import Carrito, Producto
+from .forms import (
+    RegistroForm, LoginForm, PerfilForm, ProductoForm, 
+    RecuperarPasswordForm, ResetPasswordForm
+)
+from .models import Carrito, Producto, Usuario, Categoria
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.sites.shortcuts import get_current_site
 
 # Vista de inicio (landing page)
 def home(request):
@@ -78,10 +85,80 @@ def logout_view(request):
     return redirect('home')
 
 def recuperar_password_view(request):
-    pass
+    """Vista para solicitar recuperación de contraseña (HU07)"""
+    if request.method == 'POST':
+        form = RecuperarPasswordForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                usuario = Usuario.objects.get(email=email)
+                
+                # Generar token
+                token = default_token_generator.make_token(usuario)
+                uid = urlsafe_base64_encode(force_bytes(usuario.pk))
+                
+                # Construir URL de reset
+                current_site = get_current_site(request)
+                reset_url = f"http://{current_site.domain}/reset/{uid}/{token}/"
+                
+                # Enviar email
+                mensaje = f"""
+                            Hola {usuario.first_name},
+
+                            Recibimos una solicitud para restablecer tu contraseña en Cosmofood.
+
+                            Para crear una nueva contraseña, haz clic en el siguiente enlace:
+                            {reset_url}
+
+                            Este enlace expirará en 24 horas.
+
+                            Si no solicitaste este cambio, ignora este correo.
+
+                            Saludos,
+                            El equipo de Cosmofood
+                """
+                
+                send_mail(
+                    subject='Recuperación de Contraseña - Cosmofood',
+                    message=mensaje,
+                    from_email='cosmofood@grivyzom.com',
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                
+                messages.success(request, 'Te hemos enviado un correo con instrucciones para restablecer tu contraseña.')
+                return redirect('login')
+            except Usuario.DoesNotExist:
+                messages.error(request, 'No existe una cuenta con ese correo electrónico.')
+    else:
+        form = RecuperarPasswordForm()
+    
+    return render(request, 'core/recuperar_password.html', {'form': form})
 
 def reset_password_view(request, uidb64, token):
-    pass
+    """Vista para restablecer contraseña con token (HU07)"""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        usuario = Usuario.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, Usuario.DoesNotExist):
+        usuario = None
+    
+    if usuario is not None and default_token_generator.check_token(usuario, token):
+        if request.method == 'POST':
+            form = ResetPasswordForm(request.POST)
+            if form.is_valid():
+                usuario.set_password(form.cleaned_data['password1'])
+                usuario.save()
+                messages.success(request, '¡Tu contraseña ha sido restablecida! Ahora puedes iniciar sesión.')
+                return redirect('login')
+        else:
+            form = ResetPasswordForm()
+        return render(request, 'core/reset_password.html', {'form': form, 'validlink': True})
+    else:
+        messages.error(request, 'El enlace de recuperación es inválido o ha expirado.')
+        # Es mejor mostrar un mensaje en una página en lugar de redirigir directamente
+        # para que el usuario entienda qué pasó.
+        return render(request, 'core/reset_password.html', {'validlink': False})
 
 # ========== PERFIL DE USUARIO ==========
 
@@ -126,7 +203,7 @@ def admin_productos_view(request):
     
     return render(request, 'core/admin/productos_lista.html', {
         'productos': productos,
-        'categorias': categoria.objects.filter(activo=True)
+        'categorias': Categoria.objects.filter(activo=True)
         
     })
     

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,6 +71,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'cosmofood.wsgi.application'
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.hostinger.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = 'Cosmofood <cosmofood@grivyzom.com>'
+SERVER_EMAIL = 'cosmofood@grivyzom.com'
+
+
+
+DEFAULT_FROM_EMAIL = f'Cosmofood <{config("EMAIL_HOST_USER")}>'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
