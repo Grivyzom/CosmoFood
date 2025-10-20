@@ -1,15 +1,16 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.contrib import messages
-from .forms import RegistroForm, LoginForm, PerfilForm
-from .models import Carrito
+from .forms import RegistroForm, LoginForm, PerfilForm, ProductoForm
+from .models import Carrito, Producto
 
 # Vista de inicio (landing page)
 def home(request):
-    """Página principal del sitio"""
-    return render(request, 'core/home.html')
 
+    return render(request, 'core/home.html')
 
 # ========== AUTENTICACIÓN ==========
 
@@ -76,6 +77,11 @@ def logout_view(request):
     messages.info(request, 'Has cerrado sesión correctamente.')
     return redirect('home')
 
+def recuperar_password_view(request):
+    pass
+
+def reset_password_view(request, uidb64, token):
+    pass
 
 # ========== PERFIL DE USUARIO ==========
 
@@ -83,7 +89,6 @@ def logout_view(request):
 def perfil_view(request):
     """Vista para ver datos personales (HU08)"""
     return render(request, 'core/perfil.html', {'usuario': request.user})
-
 
 @login_required
 def editar_perfil_view(request):
@@ -100,3 +105,58 @@ def editar_perfil_view(request):
         form = PerfilForm(instance=request.user)
     
     return render(request, 'core/editar_perfil.html', {'form': form})
+
+@login_required
+def admin_productos_view(request):
+
+    if request.user.rol != 'administrador':
+        return redirect('home')
+    
+    productos = Producto.objects.all().select_related('categoria')
+    
+    # Filtros
+    categoria = request.GET.get('categoria')
+    busqueda = request.GET.get('q')
+    
+    if categoria:
+        productos = productos.filter(categoria_id=categoria)
+        
+    if busqueda:
+        productos = productos.filter(nombre__icontains=busqueda)
+    
+    return render(request, 'core/admin/productos_lista.html', {
+        'productos': productos,
+        'categorias': categoria.objects.filter(activo=True)
+        
+    })
+    
+@login_required
+def admin_producto_desactivar(request, pk):
+    if request.user.rol != 'administrador':
+        return redirect('home')
+    producto = get_object_or_404(Producto, pk=pk)
+    producto.activo = False
+    producto.save()
+    
+    messages.success(request, f'Producto "{producto.nombre}" desactivado.')
+    return redirect('admin_productos')
+
+@login_required
+def admin_producto_editar(request, pk):
+    if request.user.rol != 'administrador':
+        return redirect('home')
+    
+    Producto = get_object_or_404(Producto, pk=pk)
+    
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, instance=Producto)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Producto actualizado exitosamente.')
+            return redirect('admin_productos')
+    else:
+        form = ProductoForm(instance=Producto)
+    return render(request, 'core/admin/producto_form.html',{
+        'form': form,
+        'producto': Producto
+        })

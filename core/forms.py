@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import Usuario
+from .models import Usuario, Producto
 from django.core.exceptions import ValidationError
 import re
 
@@ -153,3 +153,41 @@ class PerfilForm(forms.ModelForm):
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
             'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
         }
+        
+class RecuperarPasswordForm(forms.Form):
+    email = forms.EmailField(
+        label = 'Correo Electrónico',
+        widget= forms.EmailInput(attrs={'class': 'form-control'})
+    )
+
+class ResetPasswordForm(forms.Form):
+    password1 = forms.CharField(
+        label='Nueva Contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu nueva contraseña'
+        })
+    )
+    password2 = forms.CharField(
+        label='Confirmar Nueva Contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirma tu nueva contraseña'
+        })
+    )
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = [ 'nombre', 'descripcion', 'precio', 'imagen', 'stock', 'categoria', 'activo' ]
+        widgets = {
+                'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+                'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'precio': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+                # Nota: El widget para un ImageField/FileField es FileInput, no FileField
+                'imagen': forms.FileInput(attrs={'class':'form-control'}),
+                'stock': forms.NumberInput(attrs={'class': 'form-control'}),
+                'categoria':forms.Select(attrs={'class': 'form-control'}),
+                'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            }
+    

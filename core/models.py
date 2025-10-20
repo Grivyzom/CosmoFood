@@ -75,7 +75,6 @@ class Repartidor(models.Model):
     def __str__(self):
         return f"{self.usuario.get_full_name()} - {'Disponible' if self.disponible else 'No disponible'}"
   
-  
 class Carrito(models.Model):
       usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name="carrito")
       fecha_creacion = models.DateTimeField(auto_now_add=True)
@@ -223,7 +222,6 @@ class DetallePedido(models.Model):
       def save(self, *args, **kwargs):
             self.subtotal = self.precio_unitario * self.cantidad
             super().save(*args, **kwargs)
-      
       
 class Reclamo(models.Model):
       MOTIVO_CHOICES = [
