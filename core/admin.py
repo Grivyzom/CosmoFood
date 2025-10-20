@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Repartidor, Producto, Categoria
+from .models import Usuario, Repartidor, Producto, Categoria, Carrito, ItemCarrito, MetodoPago, Pedido, DetallePedido, Reclamo
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
@@ -31,3 +31,37 @@ class RepatidorAdmin(admin.ModelAdmin):
       list_display = ['usuario', 'vehiculo', 'disponible', 'calificacion_promedio']
       list_filter = ['disponible']
       search_fields = ['usuario__username', 'usuario__first_name', 'usuario__last_name']
+      
+@admin.register(Carrito)
+class CarritoAdmin(admin.ModelAdmin):
+    list_display = ['usuario', 'total_items', 'total_precio', 'fecha_actualizacion']
+    search_fields = ['usuario__username']
+
+@admin.register(ItemCarrito)
+class ItemCarritoAdmin(admin.ModelAdmin):
+      list_display = ['carrito', 'producto', 'cantidad', 'subtotal']
+      list_filter = ['fecha_agregado']
+      
+@admin.register(MetodoPago)
+class MetodoPagoAdmin(admin.ModelAdmin):
+      list_display = ['nombre', 'tipo', 'activo']
+      list_filter = ['tipo', 'activo']
+
+
+
+@admin.register(Pedido)
+class PedidoAdmin(admin.ModelAdmin):
+      list_display = ['numero_pedido','cliente', 'tipo_orden', 'estado']
+      list_filter = ['estado', 'tipo_orden', 'fecha_creacion']
+      search_fields = ['numero_pedido', 'cliente__username']
+      readonly_fields= ['numero_pedido']
+      
+@admin.register(DetallePedido)
+class DetallePedidoAdmin(admin.ModelAdmin):
+    list_display = ['pedido', 'producto', 'cantidad', 'precio_unitario', 'subtotal']
+      
+@admin.register(Reclamo)
+class ReclamoAdmin(admin.ModelAdmin):
+      list_display = ['id', 'cliente', 'pedido', 'motivo', 'estado', 'fecha_creacion']
+      list_filter = ['estado', 'motivo', 'fecha_creacion']
+      search_fields = ['cliente__username', 'pedido__numero_pedido']

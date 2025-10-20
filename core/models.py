@@ -102,8 +102,8 @@ class ItemCarrito(models.Model):
       fecha_agregado = models.DateTimeField(auto_now_add=True)
 
       class Meta:
-            verbose_name = [ 'Item del Carrito']
-            verbose_name_plural = ['Items del Carrito']
+            verbose_name = 'Item del Carrito'
+            verbose_name_plural = 'Items del Carrito'
             unique_together = ['carrito', 'producto']
       def __str__(self):
             return f"{self.cantidad} x {self.producto.nombre}"
@@ -131,3 +131,134 @@ class MetodoPago(models.Model):
             
       def __str__(self):
             return self.nombre
+      
+# Se crea la clase pedido y se le hereda (models.Model) lo que significa que django
+# Creará automaticamente la tabla Pedido en la BD para guardar los pedidos      
+class Pedido(models.Model):
+      
+      # Definimos opciones de estado para el pedido
+      ESTADO_CHOICES= [
+            # El primer valor se almacena BD, el 
+            # El segundo valor es el que se muestra forms/admin 
+            ('pendiente', 'Pendiente'),
+            ('confirmado', 'Confirmado'),
+            ('en_preparacion', 'En Preparación'),
+            ('listo', 'Listo para Entregar'),
+            ('en_camino', 'En Camino'),
+            ('entregado', 'Entregado'),
+            ('cancelado', 'Cancelado'),
+      ]
+      
+      # Definimos opciones de tipo de orden para el pedido
+      TIPO_ORDEN_CHOICES =[
+            ('local', 'Para Comer en Local'),
+            ('retiro', 'Para Retirar'),
+            ('delivery', 'Delivery a Domicilio '),
+      ]
+      
+      #ForeignKey: relación muchos-a-uno.
+      # Un pedido pertenece a un Usuario.
+      # Si el usuario se elimina (on_delete=models.CASCADE), también se borran sus pedidos.
+      # related_name='pedidos' permite acceder desde el usuario a todos sus pedidos:
+      # usuario.pedidos.all()
+      cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='pedidos')
+      repartidor = models.ForeignKey(Repartidor, on_delete=models.SET_NULL,null=True)
+      metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.PROTECT)
+      
+      numero_pedido = models.CharField(max_length=20,unique=True, editable=True)
+      tipo_orden = models.CharField(max_length=20, choices=TIPO_ORDEN_CHOICES,default='local')
+      estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+      
+      direccion_entrega = models.CharField(max_length=1200,null=True, blank=True)
+      referencia_direccion = models.CharField(max_length=200, blank=True, null=True)
+      
+      subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+      costo_envio = models.DecimalField(max_digits=10, decimal_places=2)
+      total = models.DecimalField(max_digits=10, decimal_places=2)
+      
+      notas_cliente = models.TextField(blank=True, null=True)
+      notas_cocina = models.TextField(blank=True, null=True)
+      
+      fecha_creacion = models.DateTimeField(auto_now_add=True)
+      fecha_confirmacion = models.DateTimeField(null=True, blank=True)
+      fecha_preparacion =models.DateTimeField (null=True, blank=True)
+      fecha_listo = models.DateTimeField(null=True, blank=True)
+      fecha_entrega = models.DateTimeField(null=True, blank=True)
+      
+      
+    #  verbose_name: nombre legible singular (para el panel admin).
+
+    #  verbose_name_plural: plural del nombre.
+
+    #  ordering: orden por defecto al consultar (-fecha_creacion → más recientes primero).
+      
+      class Meta:
+            verbose_name = 'Pedido'
+            verbose_name_plural = 'Pedidos'
+            ordering = ['-fecha_creacion']
+            
+      def __str__(self):
+            return f"#{self.numero_pedido} - Pedido de {self.cliente.username}"
+      
+      def save(self, *args, **kwargs):
+            if not self.numero_pedido:
+                  import random
+                  import string
+                  
+                  self.numero_pedido = ''.join(random.choices(string.digits, k=8))
+            super().save(*args)
+            
+class DetallePedido(models.Model):
+      pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='detalles')
+      producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+      cantidad = models.PositiveIntegerField()
+      precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+      subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+      
+      class Meta:
+            verbose_name = 'Detalle del Pedido'
+            verbose_name_plural = 'Detalles del Pedido'
+      def __str__(self):
+            return f"{self.cantidad}x {self.producto.nombre} - {self.pedido.numero_pedido}"
+      def save(self, *args, **kwargs):
+            self.subtotal = self.precio_unitario * self.cantidad
+            super().save(*args, **kwargs)
+      
+      
+class Reclamo(models.Model):
+      MOTIVO_CHOICES = [
+            ('pedido_incorrecto', 'Pedido Incorrecto'),
+            ('producto_danado', 'Producto Dañado'),
+            ('demora_excesiva', 'Demora Excesiva'),
+            ('mala_atencion', 'Mala Atención'),
+            ('otro', 'Otro'),
+      ]
+      
+      ESTADO_CHOIDES = [
+            ('nuevo', 'Nuevo'),
+            ('en_revision', 'En Revisión'),
+            ('respondido', 'Respondido'),
+            ('resuelto', 'Resuelto'),
+            ('cerrado', 'Cerrado'),
+      ]
+      
+      cliente = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+      pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+      
+      motivo = models.CharField(max_length=20, choices=MOTIVO_CHOICES,)
+      despcripcion = models.TextField()
+      estado = models.CharField(max_length=20, choices=ESTADO_CHOIDES, default='Nuevo')
+      
+      respuesta = models.TextField(blank=True, null=True)
+      atendido = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='reclamos_atendidos')
+      
+      fecha_creacion = models.DateTimeField(auto_now_add=True)
+      fecha_respuesta = models.DateTimeField(null=True, blank=True)
+      
+      class Meta:
+            verbose_name = 'Reclamo'
+            verbose_name_plural = 'Reclamos'
+            ordering = ['-fecha_creacion']
+            
+      def __str__(self):
+            return f"#{self.id} Reclamo - {self.cliente.username}"
