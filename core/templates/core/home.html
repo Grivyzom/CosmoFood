@@ -1,0 +1,67 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Inicio - Cosmofood{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center my-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">
+                Bienvenido a <span style="color: var(--primary-color);">Cosmofood</span>
+            </h1>
+            <p class="lead mb-4">
+                La mejor comida rápida de Valdivia, ahora a un clic de distancia. 
+                Realiza tus pedidos online y recibe en la comodidad de tu hogar.
+            </p>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'registro' %}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-user-plus"></i> Crear Cuenta
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
+                    Iniciar Sesión
+                </a>
+            {% else %}
+                <a href="#" class="btn btn-primary btn-lg">
+                    <i class="fas fa-utensils"></i> Ver Menú
+                </a>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600" 
+                 class="img-fluid rounded shadow" alt="Comida rápida">
+        </div>
+    </div>
+    
+    <!-- Características -->
+    <div class="row text-center my-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-shipping-fast fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Delivery Rápido</h5>
+                    <p class="card-text">Entregas en menos de 30 minutos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-credit-card fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Pago Seguro</h5>
+                    <p class="card-text">Múltiples métodos de pago disponibles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-star fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Calidad Garantizada</h5>
+                    <p class="card-text">Los mejores ingredientes frescos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
