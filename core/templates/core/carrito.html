@@ -4,98 +4,101 @@
 {% block title %}Mi Carrito de Compras - Cosmofood{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <h1 class="mb-4">
-        <i class="fas fa-shopping-cart"></i> Mi Carrito de Compras
+<div class="container mx-auto px-4 my-12">
+    <h1 class="text-4xl font-bold mb-8 text-gray-800">
+        <i class="fas fa-shopping-cart text-primary"></i> Mi Carrito de Compras
     </h1>
 
     {% if not items %}
-        <div class="row">
-            <div class="col-md-12">
-                <div class="alert alert-info text-center" role="alert">
-                    <h4 class="alert-heading">¡Tu carrito está vacío!</h4>
-                    <p>Parece que aún no has agregado productos a tu carrito.</p>
-                    <hr>
-                    <p class="mb-0">
-                        <a href="{% url 'catalogo_productos' %}" class="btn btn-primary">
-                            <i class="fas fa-utensils"></i> Ir al Menú
-                        </a>
-                    </p>
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-8 text-center">
+                <div class="text-blue-500 text-6xl mb-4">
+                    <i class="fas fa-shopping-cart"></i>
                 </div>
+                <h4 class="text-2xl font-bold text-blue-800 mb-3">¡Tu carrito está vacío!</h4>
+                <p class="text-blue-700 mb-6">Parece que aún no has agregado productos a tu carrito.</p>
+                <a href="{% url 'catalogo_productos' %}" class="inline-block bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-lg transition duration-200">
+                    <i class="fas fa-utensils mr-2"></i> Ir al Menú
+                </a>
             </div>
         </div>
     {% else %}
-        <div class="row">
+        <div class="grid lg:grid-cols-3 gap-8">
             <!-- Lista de Items -->
-            <div class="col-lg-8">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        {% for item in items %}
-                            <div class="row mb-4 align-items-center">
-                                <div class="col-md-2">
-                                    {% if item.producto.imagen %}
-                                        <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" class="img-fluid rounded">
-                                    {% else %}
-                                        <img src="{% static 'core/img/placeholder.png' %}" alt="Imagen no disponible" class="img-fluid rounded">
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-4">
-                                    <h5 class="mb-0">{{ item.producto.nombre }}</h5>
-                                    <small class="text-muted">Precio: ${{ item.producto.precio|floatformat:0 }}</small>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="input-group">
-                                        <button class="btn btn-outline-secondary btn-sm" type="button">-</button>
-                                        <input type="text" class="form-control form-control-sm text-center" value="{{ item.cantidad }}" readonly>
-                                        <button class="btn btn-outline-secondary btn-sm" type="button">+</button>
-                                    </div>
-                                </div>
-                                <div class="col-md-2 text-end">
-                                    <span class="fw-bold">${{ item.subtotal|floatformat:0 }}</span>
-                                </div>
-                                <div class="col-md-1 text-end">
-                                    <a href="#" class="btn btn-sm btn-outline-danger" title="Eliminar item">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
-                                </div>
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-lg p-6 space-y-6">
+                    {% for item in items %}
+                        <div class="flex flex-col md:flex-row md:items-center gap-4 pb-6 {% if not forloop.last %}border-b{% endif %}">
+                            <div class="w-24 h-24 flex-shrink-0">
+                                {% if item.producto.imagen %}
+                                    <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" class="w-full h-full object-cover rounded-lg">
+                                {% else %}
+                                    <img src="{% static 'core/img/placeholder.svg' %}" alt="Imagen no disponible" class="w-full h-full object-cover rounded-lg">
+                                {% endif %}
                             </div>
-                            {% if not forloop.last %}<hr>{% endif %}
-                        {% endfor %}
-                    </div>
+                            <div class="flex-grow">
+                                <h5 class="text-xl font-bold text-gray-800 mb-1">{{ item.producto.nombre }}</h5>
+                                <small class="text-gray-500">Precio: ${{ item.producto.precio|floatformat:0 }}</small>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <form action="{% url 'actualizar_carrito' %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <input type="hidden" name="action" value="decrease">
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 w-8 h-8 rounded-lg transition font-bold" type="submit">-</button>
+                                </form>
+                                <input type="text" class="w-16 text-center border border-gray-300 rounded-lg py-1" value="{{ item.cantidad }}" readonly>
+                                <form action="{% url 'actualizar_carrito' %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <input type="hidden" name="action" value="increase">
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 w-8 h-8 rounded-lg transition font-bold" type="submit">+</button>
+                                </form>
+                            </div>
+                            <div class="md:w-24 text-center md:text-right">
+                                <span class="text-xl font-bold text-primary">${{ item.subtotal|floatformat:0 }}</span>
+                            </div>
+                            <div>
+                                <form action="{% url 'eliminar_item_carrito' %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition" title="Eliminar item">
+                                        <i class="fas fa-trash-alt text-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
 
             <!-- Resumen del Pedido -->
-            <div class="col-lg-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">Resumen del Pedido</h5>
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden sticky top-24">
+                    <div class="bg-gray-100 border-b p-4">
+                        <h5 class="font-bold text-xl text-gray-800">Resumen del Pedido</h5>
                     </div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Subtotal
-                                <span>${{ carrito.total_precio|floatformat:0 }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Costo de envío
-                                <span>$0</span> <!-- A implementar -->
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center fw-bold fs-5">
-                                Total
-                                <span>${{ carrito.total_precio|floatformat:0 }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="card-footer">
-                        <div class="d-grid gap-2">
-                            <a href="#" class="btn btn-primary btn-lg">
-                                <i class="fas fa-credit-card"></i> Proceder al Pago
-                            </a>
-                            <a href="{% url 'catalogo_productos' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left"></i> Seguir Comprando
-                            </a>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-center pb-3 border-b">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span class="font-semibold text-gray-800">${{ carrito.total_precio|floatformat:0 }}</span>
                         </div>
+                        <div class="flex justify-between items-center pb-3 border-b">
+                            <span class="text-gray-600">Costo de envío</span>
+                            <span class="font-semibold text-gray-800">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xl font-bold pt-2">
+                            <span>Total</span>
+                            <span class="text-primary">${{ carrito.total_precio|floatformat:0 }}</span>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0 space-y-3">
+                        <a href="#" class="block w-full bg-primary hover:bg-primary-dark text-white font-semibold text-center py-3 rounded-lg transition duration-200">
+                            <i class="fas fa-credit-card mr-2"></i> Proceder al Pago
+                        </a>
+                        <a href="{% url 'catalogo_productos' %}" class="block w-full border-2 border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-center py-3 rounded-lg transition duration-200">
+                            <i class="fas fa-arrow-left mr-2"></i> Seguir Comprando
+                        </a>
                     </div>
                 </div>
             </div>

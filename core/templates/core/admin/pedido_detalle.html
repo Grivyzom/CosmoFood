@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Detalle del Pedido #{{ pedido.numero_pedido }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 my-12">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <h1 class="text-4xl font-bold text-gray-800">Detalle del Pedido #{{ pedido.numero_pedido }}</h1>
+        <a href="{% url 'admin_pedidos_lista' %}" class="border-2 border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold px-6 py-3 rounded-lg transition duration-200">
+            <i class="fas fa-arrow-left"></i> Volver al listado
+        </a>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Detalles del Pedido -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gray-100 border-b p-4">
+                    <h5 class="font-bold text-xl text-gray-800">Productos del Pedido</h5>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% for detalle in pedido.detalles.all %}
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center gap-4">
+                                    <img src="{{ detalle.producto.imagen.url|default:'/static/core/img/placeholder.svg' }}" 
+                                         alt="{{ detalle.producto.nombre }}" 
+                                         class="w-16 h-16 object-cover rounded-lg">
+                                    <span class="font-medium text-gray-800">{{ detalle.cantidad }}x {{ detalle.producto.nombre }}</span>
+                                </div>
+                                <span class="font-bold text-primary">${{ detalle.subtotal|floatformat:0 }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gray-100 border-b p-4">
+                    <h5 class="font-bold text-xl text-gray-800">Información del Cliente</h5>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">Nombre:</p>
+                        <p class="text-gray-800">{{ pedido.cliente.get_full_name|default:pedido.cliente.username }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">Email:</p>
+                        <p class="text-gray-800">{{ pedido.cliente.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">Teléfono:</p>
+                        <p class="text-gray-800">{{ pedido.cliente.telefono|default:'No especificado' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">Dirección de Entrega:</p>
+                        <p class="text-gray-800">{{ pedido.direccion_entrega|default:'No especificada' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">Notas del Cliente:</p>
+                        <p class="text-gray-800">{{ pedido.notas_cliente|default:'Ninguna' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestión y Resumen -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden sticky top-24">
+                <div class="bg-gradient-to-r from-primary to-secondary text-white p-4">
+                    <h5 class="font-bold text-lg">Gestionar Estado</h5>
+                </div>
+                <div class="p-6">
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label for="estado" class="block text-sm font-medium text-gray-700 mb-2">Cambiar estado del pedido:</label>
+                            <select name="estado" id="estado" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                {% for value, display in estados_posibles %}
+                                    <option value="{{ value }}" {% if pedido.estado == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-lg transition duration-200">
+                            Actualizar Estado
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gray-100 border-b p-4">
+                    <h5 class="font-bold text-lg text-gray-800">Resumen Financiero</h5>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-gray-700">
+                            <span>Subtotal:</span>
+                            <span class="font-medium">${{ pedido.subtotal|floatformat:0 }}</span>
+                        </div>
+                        <div class="flex justify-between text-gray-700">
+                            <span>Envío:</span>
+                            <span class="font-medium">${{ pedido.costo_envio|floatformat:0 }}</span>
+                        </div>
+                        <hr class="border-gray-300">
+                        <div class="flex justify-between font-bold text-xl">
+                            <span>Total:</span>
+                            <span class="text-primary">${{ pedido.total|floatformat:0 }}</span>
+                        </div>
+                        <hr class="border-gray-300">
+                        <div class="flex justify-between text-gray-700">
+                            <span>Método de Pago:</span>
+                            <span class="font-semibold">{{ pedido.metodo_pago.nombre }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

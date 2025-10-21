@@ -4,29 +4,87 @@
 {% block title %}Nuestro Menú - Cosmofood{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="row">
-        <!-- Filtros y Búsqueda -->
-        <div class="col-lg-3">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-filter"></i> Filtrar Productos</h5>
+<div class="container mx-auto px-4 my-12">
+    
+    <!-- Sección de Categorías -->
+    <div class="mb-12">
+        <h1 class="text-4xl font-bold text-gray-800 mb-3 text-center">Nuestro Menú</h1>
+        <p class="text-gray-600 text-center mb-8">Selecciona una categoría para explorar nuestros deliciosos productos</p>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+            <!-- Tarjeta Ver Todo -->
+            <a href="?ver_todo=true" 
+               class="bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-lg hover:shadow-2xl p-8 text-center transition duration-300 transform hover:scale-105 hover:-translate-y-2 {% if request.GET.ver_todo %}ring-4 ring-yellow-400{% endif %}">
+                <div class="text-6xl mb-4">
+                    🍽️
                 </div>
-                <div class="card-body">
-                    <form method="get" action="{% url 'catalogo_productos' %}">
+                <h3 class="font-bold text-lg text-white mb-1">Ver Todo</h3>
+                <p class="text-sm text-orange-100">Menú completo</p>
+            </a>
+            
+            {% for cat in categorias %}
+                <a href="?categoria={{ cat.id }}" 
+                   class="bg-white rounded-2xl shadow-lg hover:shadow-2xl p-8 text-center transition duration-300 transform hover:scale-105 hover:-translate-y-2 {% if categoria_seleccionada == cat.id|stringformat:'s' %}ring-4 ring-primary bg-gradient-to-br from-orange-50 to-orange-100{% endif %}">
+                    <div class="text-6xl mb-4">
+                        {% if cat.nombre == "Hamburguesas" %}
+                            🍔
+                        {% elif cat.nombre == "Pizzas" %}
+                            🍕
+                        {% elif cat.nombre == "Bebidas" %}
+                            🥤
+                        {% elif cat.nombre == "Postres" %}
+                            🍰
+                        {% elif cat.nombre == "Ensaladas" %}
+                            🥗
+                        {% elif cat.nombre == "Papas" or cat.nombre == "Acompañamientos" or cat.nombre == "Acompañantes" %}
+                            🍟
+                        {% elif cat.nombre == "Sandwiches" or cat.nombre == "Sándwiches" %}
+                            🥪
+                        {% elif cat.nombre == "Tacos" %}
+                            
+                        {% elif cat.nombre == "Sushi" %}
+                            🍣
+                        {% else %}
+                            🍽️
+                        {% endif %}
+                    </div>
+                    <h3 class="font-bold text-lg text-gray-800 mb-1">{{ cat.nombre }}</h3>
+                    <p class="text-sm text-gray-500">Explorar</p>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if categoria_seleccionada or busqueda or request.GET.ver_todo %}
+    <!-- Solo mostrar esta sección si hay una categoría seleccionada, búsqueda activa o ver todo -->
+    <div class="grid lg:grid-cols-4 gap-8">
+        <!-- Filtros y Búsqueda -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-lg sticky top-24">
+                <div class="bg-gradient-to-r from-primary to-secondary text-white p-4 rounded-t-xl">
+                    <h5 class="font-bold text-lg"><i class="fas fa-filter"></i> Filtrar Productos</h5>
+                </div>
+                <div class="p-6 space-y-5">
+                    <form method="get" action="{% url 'catalogo_productos' %}" class="space-y-4">
                         <!-- Búsqueda -->
-                        <div class="mb-3">
-                            <label for="q" class="form-label fw-bold">Buscar por nombre</label>
-                            <div class="input-group">
-                                <input type="text" name="q" id="q" class="form-control" placeholder="Ej: Hamburguesa" value="{{ busqueda }}">
-                                <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                        <div>
+                            <label for="q" class="block text-sm font-bold text-gray-700 mb-2">Buscar por nombre</label>
+                            <div class="flex gap-2">
+                                <input type="text" name="q" id="q" 
+                                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" 
+                                       placeholder="Ej: Hamburguesa" value="{{ busqueda }}">
+                                <button class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
                             </div>
                         </div>
 
                         <!-- Filtro por Categoría -->
-                        <div class="mb-3">
-                            <label for="categoria" class="form-label fw-bold">Categoría</label>
-                            <select name="categoria" id="categoria" class="form-select" onchange="this.form.submit()">
+                        <div>
+                            <label for="categoria" class="block text-sm font-bold text-gray-700 mb-2">Categoría</label>
+                            <select name="categoria" id="categoria" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" 
+                                    onchange="this.form.submit()">
                                 <option value="">Todas</option>
                                 {% for cat in categorias %}
                                     <option value="{{ cat.id }}" {% if categoria_seleccionada == cat.id|stringformat:"s" %}selected{% endif %}>
@@ -36,43 +94,153 @@
                             </select>
                         </div>
 
-                        <div class="d-grid">
-                            <a href="{% url 'catalogo_productos' %}" class="btn btn-secondary btn-sm">Limpiar Filtros</a>
-                        </div>
+                        <a href="{% url 'catalogo_productos' %}" 
+                           class="block w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-center py-2 rounded-lg transition">
+                            <i class="fas fa-arrow-left mr-2"></i> Volver a Categorías
+                        </a>
                     </form>
                 </div>
             </div>
         </div>
 
         <!-- Listado de Productos -->
-        <div class="col-lg-9">
-            <h1 class="mb-4">Nuestro Menú</h1>
+        <div class="lg:col-span-3">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-800">
+                    {% if request.GET.ver_todo %}
+                        Todos los Productos
+                    {% elif categoria_seleccionada %}
+                        {% for cat in categorias %}
+                            {% if cat.id|stringformat:"s" == categoria_seleccionada %}
+                                {{ cat.nombre }}
+                            {% endif %}
+                        {% endfor %}
+                    {% elif busqueda %}
+                        Resultados de búsqueda: "{{ busqueda }}"
+                    {% else %}
+                        Todos los Productos
+                    {% endif %}
+                </h2>
+                <p class="text-gray-600 mt-2">
+                    {% if productos %}
+                        {{ productos|length }} producto{{ productos|length|pluralize }} encontrado{{ productos|length|pluralize }}
+                    {% endif %}
+                </p>
+            </div>
 
             {% if not productos %}
-                <div class="alert alert-info text-center">
-                    <p class="mb-0">No se encontraron productos que coincidan con tu búsqueda.</p>
-                    <p>Intenta con otros filtros o <a href="{% url 'catalogo_productos' %}" class="alert-link">revisa nuestro menú completo</a>.</p>
+                <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-6 rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-info-circle text-2xl mr-3"></i>
+                        <h4 class="font-bold text-lg">No se encontraron productos</h4>
+                    </div>
+                    <p class="mb-4">No se encontraron productos que coincidan con tu búsqueda.</p>
+                    <a href="{% url 'catalogo_productos' %}" class="inline-block bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-2 rounded-lg transition">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver a Categorías
+                    </a>
                 </div>
             {% else %}
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {% for producto in productos %}
-                        <div class="col">
-                            <div class="card h-100 shadow-sm product-card">
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-1 transition duration-300 flex flex-col">
+                            <!-- Imagen del producto -->
+                            <div class="relative">
                                 {% if producto.imagen %}
-                                    <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
+                                    <img src="{{ producto.imagen.url }}" class="w-full h-48 object-cover" alt="{{ producto.nombre }}">
                                 {% else %}
-                                    <img src="{% static 'core/img/placeholder.png' %}" class="card-img-top" alt="Imagen no disponible">
+                                    <img src="{% static 'core/img/placeholder.svg' %}" class="w-full h-48 object-cover" alt="Imagen no disponible">
                                 {% endif %}
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">{{ producto.nombre }}</h5>
-                                    <p class="card-text text-muted small">{{ producto.descripcion|truncatewords:15 }}</p>
-                                    <div class="mt-auto">
-                                        <p class="card-text fs-4 fw-bold text-primary">${{ producto.precio|floatformat:0 }}</p>
-                                        <div class="d-grid">
-                                            <a href="#" class="btn btn-primary">
-                                                <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                                {% if producto.stock < 5 %}
+                                    <span class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                        ¡Pocas unidades!
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Contenido del card -->
+                            <div class="p-5 flex flex-col flex-grow">
+                                <h5 class="text-xl font-bold text-gray-800 mb-2">{{ producto.nombre }}</h5>
+                                <p class="text-gray-600 text-sm mb-4">{{ producto.descripcion|truncatewords:15 }}</p>
+                                
+                                <!-- Precio -->
+                                <div class="mt-auto">
+                                    <p class="text-3xl font-bold text-primary mb-4">${{ producto.precio|floatformat:0 }}</p>
+                                    
+                                    <!-- Botones -->
+                                    <div class="space-y-2">
+                                        {% if request.user.is_authenticated %}
+                                            <!-- Botón Ver Detalles -->
+                                            <button onclick="verProducto{{ producto.id }}()" 
+                                                    class="w-full border-2 border-primary hover:bg-primary hover:text-white text-primary font-semibold py-2.5 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                                                <i class="fas fa-eye"></i> Ver Detalles
+                                            </button>
+                                            
+                                            <!-- Botón Agregar al Carrito -->
+                                            <form action="{% url 'agregar_al_carrito' %}" method="post" class="w-full">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="product_id" value="{{ producto.id }}">
+                                                <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                                                    <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <a href="{% url 'login' %}" class="block w-full bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold text-center py-3 rounded-lg transition duration-200">
+                                                Inicia sesión para comprar
                                             </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Ver Producto -->
+                        <div id="modal-producto-{{ producto.id }}" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4" style="display: none;">
+                            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-in">
+                                <div class="sticky top-0 bg-gradient-to-r from-primary to-secondary text-white p-4 flex justify-between items-center rounded-t-2xl z-10">
+                                    <h3 class="text-2xl font-bold">{{ producto.nombre }}</h3>
+                                    <button onclick="cerrarModal{{ producto.id }}()" class="text-white hover:text-gray-200 text-3xl leading-none">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="p-6">
+                                    {% if producto.imagen %}
+                                        <img src="{{ producto.imagen.url }}" class="w-full h-64 object-cover rounded-xl mb-4" alt="{{ producto.nombre }}">
+                                    {% else %}
+                                        <img src="{% static 'core/img/placeholder.svg' %}" class="w-full h-64 object-cover rounded-xl mb-4" alt="Imagen no disponible">
+                                    {% endif %}
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <h4 class="text-lg font-bold text-gray-800 mb-2">Descripción</h4>
+                                            <p class="text-gray-600">{{ producto.descripcion }}</p>
                                         </div>
+                                        
+                                        <div class="flex justify-between items-center py-4 border-t border-b">
+                                            <span class="text-gray-700 font-semibold">Categoría:</span>
+                                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">{{ producto.categoria.nombre }}</span>
+                                        </div>
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-semibold">Stock disponible:</span>
+                                            <span class="text-gray-800 font-bold">{{ producto.stock }} unidades</span>
+                                        </div>
+                                        
+                                        <div class="bg-gray-50 p-4 rounded-lg">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-2xl font-bold text-gray-800">Precio:</span>
+                                                <span class="text-4xl font-bold text-primary">${{ producto.precio|floatformat:0 }}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if request.user.is_authenticated %}
+                                            <form action="{% url 'agregar_al_carrito' %}" method="post">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="product_id" value="{{ producto.id }}">
+                                                <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-4 rounded-lg transition duration-200 text-lg flex items-center justify-center gap-2">
+                                                    <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                                                </button>
+                                            </form>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -82,5 +250,33 @@
             {% endif %}
         </div>
     </div>
+    {% endif %}
 </div>
+
+<!-- Scripts para los modales -->
+{% if productos %}
+<script>
+    {% for producto in productos %}
+    function verProducto{{ producto.id }}() {
+        const modal = document.getElementById('modal-producto-{{ producto.id }}');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function cerrarModal{{ producto.id }}() {
+        const modal = document.getElementById('modal-producto-{{ producto.id }}');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('modal-producto-{{ producto.id }}').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarModal{{ producto.id }}();
+        }
+    });
+    {% endfor %}
+</script>
+{% endif %}
+
 {% endblock %}

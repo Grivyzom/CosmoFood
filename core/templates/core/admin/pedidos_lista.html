@@ -1,0 +1,94 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Gestión de Pedidos{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 my-12">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <h1 class="text-4xl font-bold text-gray-800">
+            <i class="fas fa-dolly-flatbed text-primary"></i> Gestión de Pedidos
+        </h1>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <form method="get" class="grid md:grid-cols-12 gap-4 items-end">
+            <div class="md:col-span-6">
+                <label for="q" class="block text-sm font-medium text-gray-700 mb-2">Buscar por Nº Pedido o Cliente</label>
+                <input type="text" name="q" id="q" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" 
+                       value="{{ busqueda }}" placeholder="Ej: 123456 o Juan Pérez">
+            </div>
+            <div class="md:col-span-4">
+                <label for="estado" class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Estado</label>
+                <select name="estado" id="estado" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">Todos los estados</option>
+                    {% for value, display in estados_posibles %}
+                        <option value="{{ value }}" {% if estado_seleccionado == value %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-2 rounded-lg transition duration-200">
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Pedidos -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Nº Pedido</th>
+                        <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Cliente</th>
+                        <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Fecha</th>
+                        <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Total</th>
+                        <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Estado</th>
+                        <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for pedido in pedidos %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4">
+                                <strong class="text-gray-800">#{{ pedido.numero_pedido }}</strong>
+                            </td>
+                            <td class="px-6 py-4 text-gray-700">
+                                {{ pedido.cliente.get_full_name|default:pedido.cliente.username }}
+                            </td>
+                            <td class="px-6 py-4 text-gray-600">
+                                {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="font-bold text-primary">${{ pedido.total|floatformat:0 }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full">
+                                    {{ pedido.get_estado_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <a href="{% url 'admin_pedido_detalle' pedido.pk %}" 
+                                   class="inline-block border-2 border-primary hover:bg-primary hover:text-white text-primary font-semibold px-4 py-2 rounded-lg transition duration-200">
+                                    <i class="fas fa-eye"></i> Ver / Gestionar
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-inbox text-4xl mb-3 block text-gray-400"></i>
+                                No se encontraron pedidos que coincidan con los filtros.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

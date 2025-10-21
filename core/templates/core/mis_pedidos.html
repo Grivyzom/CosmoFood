@@ -1,0 +1,98 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Mis Pedidos - Cosmofood{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 my-12">
+    <h1 class="text-4xl font-bold mb-8 text-gray-800">
+        <i class="fas fa-history text-primary"></i> Mis Pedidos
+    </h1>
+
+    {% if not pedidos %}
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-8 text-center">
+                <div class="text-blue-500 text-6xl mb-4">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h4 class="text-2xl font-bold text-blue-800 mb-3">Aún no tienes pedidos</h4>
+                <p class="text-blue-700 mb-6">Parece que todavía no has realizado ninguna compra. ¡Explora nuestro menú y haz tu primer pedido!</p>
+                <a href="{% url 'catalogo_productos' %}" class="inline-block bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-lg transition duration-200">
+                    <i class="fas fa-utensils mr-2"></i> Ir al Menú
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="space-y-4">
+            {% for pedido in pedidos %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gray-50 p-4 border-b cursor-pointer hover:bg-gray-100 transition" 
+                         onclick="document.getElementById('pedido-{{ pedido.id }}').classList.toggle('hidden')">
+                        <div class="flex flex-wrap justify-between items-center gap-4">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-chevron-down text-gray-400"></i>
+                                <span class="font-bold text-lg text-gray-800">Pedido #{{ pedido.numero_pedido }}</span>
+                            </div>
+                            <span class="text-gray-600">{{ pedido.fecha_creacion|date:"d/m/Y" }}</span>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 font-semibold rounded-full text-sm">
+                                {{ pedido.get_estado_display }}
+                            </span>
+                            <span class="font-bold text-xl text-primary">${{ pedido.total|floatformat:0 }}</span>
+                        </div>
+                    </div>
+                    <div id="pedido-{{ pedido.id }}" class="{% if not forloop.first %}hidden{% endif %} p-6">
+                        <div class="grid lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2">
+                                <h5 class="font-bold text-lg mb-4 text-gray-800">Detalles del Pedido</h5>
+                                <div class="space-y-3">
+                                    {% for detalle in pedido.detalles.all %}
+                                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                            <div class="flex items-center gap-4">
+                                                <img src="{{ detalle.producto.imagen.url|default_if_none:'/static/core/img/placeholder.svg' }}" 
+                                                     alt="{{ detalle.producto.nombre }}" 
+                                                     class="w-16 h-16 object-cover rounded-lg">
+                                                <div>
+                                                    <p class="font-semibold text-gray-800">{{ detalle.cantidad }}x {{ detalle.producto.nombre }}</p>
+                                                    <p class="text-sm text-gray-500">Precio unitario: ${{ detalle.producto.precio|floatformat:0 }}</p>
+                                                </div>
+                                            </div>
+                                            <span class="font-bold text-primary">${{ detalle.subtotal|floatformat:0 }}</span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="lg:col-span-1">
+                                <h5 class="font-bold text-lg mb-4 text-gray-800">Resumen</h5>
+                                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                                    <div class="flex justify-between text-gray-700">
+                                        <span>Subtotal:</span>
+                                        <span>${{ pedido.subtotal|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-gray-700">
+                                        <span>Envío:</span>
+                                        <span>${{ pedido.costo_envio|floatformat:0 }}</span>
+                                    </div>
+                                    <hr class="border-gray-300">
+                                    <div class="flex justify-between font-bold text-lg">
+                                        <span>Total:</span>
+                                        <span class="text-primary">${{ pedido.total|floatformat:0 }}</span>
+                                    </div>
+                                </div>
+                                <a href="#" class="block w-full mt-4 border-2 border-primary hover:bg-primary hover:text-white text-primary font-semibold text-center py-2 rounded-lg transition duration-200">
+                                    <i class="fas fa-receipt mr-2"></i> Ver Factura
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    // Script para mantener el primer acordeón abierto por defecto ya está manejado con hidden class
+</script>
+{% endblock %}
+{% endblock %}

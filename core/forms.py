@@ -4,6 +4,12 @@ from .models import Usuario, Producto
 from django.core.exceptions import ValidationError
 import re
 
+# Clases de Tailwind CSS para inputs
+TAILWIND_INPUT_CLASSES = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition'
+TAILWIND_TEXTAREA_CLASSES = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition'
+TAILWIND_SELECT_CLASSES = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition'
+TAILWIND_CHECKBOX_CLASSES = 'h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded'
+
 class RegistroForm(UserCreationForm):
     """Formulario de registro de usuarios (HU05)"""
     
@@ -14,7 +20,7 @@ class RegistroForm(UserCreationForm):
         required=True,
         label='Correo Electrónico',
         widget=forms.EmailInput(attrs={
-            'class': 'form-control', 
+            'class': TAILWIND_INPUT_CLASSES, 
             'placeholder': 'tucorreo@ejemplo.com'
         })
     )
@@ -24,7 +30,7 @@ class RegistroForm(UserCreationForm):
         required=True, 
         label='Nombres',
         widget=forms.TextInput(attrs={
-            'class': 'form-control',
+            'class': TAILWIND_INPUT_CLASSES,
             'placeholder': 'Ingresa tu nombre'
         })
     )
@@ -34,7 +40,7 @@ class RegistroForm(UserCreationForm):
         required=True, 
         label='Apellidos',
         widget=forms.TextInput(attrs={
-            'class': 'form-control',
+            'class': TAILWIND_INPUT_CLASSES,
             'placeholder': 'Ingresa tu apellido'
         })
     )
@@ -44,7 +50,7 @@ class RegistroForm(UserCreationForm):
         required=False, 
         label='Teléfono',
         widget=forms.TextInput(attrs={
-            'class': 'form-control',
+            'class': TAILWIND_INPUT_CLASSES,
             'placeholder': '+569 1234 5678'
         })
     )
@@ -53,7 +59,7 @@ class RegistroForm(UserCreationForm):
         required=False, 
         label='Dirección',
         widget=forms.Textarea(attrs={
-            'class': 'form-control',
+            'class': TAILWIND_TEXTAREA_CLASSES,
             'rows': 3,
             'placeholder': 'Ingresa tu dirección (opcional)'
         })
@@ -65,20 +71,20 @@ class RegistroForm(UserCreationForm):
         fields = ['username', 'email', 'first_name', 'last_name', 'telefono', 'direccion', 'password1', 'password2']
         widgets = {
             'username': forms.TextInput(attrs={
-                'class': 'form-control', 
+                'class': TAILWIND_INPUT_CLASSES, 
                 'placeholder': 'Nombre de usuario'
             })
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Añadir clases de Bootstrap a los campos de contraseña
+        # Añadir clases de Tailwind a los campos de contraseña
         self.fields['password1'].widget.attrs.update({
-            'class': 'form-control', 
+            'class': TAILWIND_INPUT_CLASSES, 
             'placeholder': 'Contraseña'
         })
         self.fields['password2'].widget.attrs.update({
-            'class': 'form-control',
+            'class': TAILWIND_INPUT_CLASSES,
             'placeholder': 'Confirmar contraseña'
         })
         
@@ -123,15 +129,17 @@ class LoginForm(AuthenticationForm):
     username = forms.CharField(
         label='Usuario',
         widget=forms.TextInput(attrs={
-            'class': 'form-control',
+            'class': TAILWIND_INPUT_CLASSES,
             'placeholder': 'Nombre de usuario',
             'autofocus': True
         })
     )
     password = forms.CharField(
           label='Contraseña',
-          widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña'})
-      
+          widget=forms.PasswordInput(attrs={
+              'class': TAILWIND_INPUT_CLASSES, 
+              'placeholder': 'Contraseña'
+          })
     )
     
 class PerfilForm(forms.ModelForm):
@@ -147,18 +155,18 @@ class PerfilForm(forms.ModelForm):
             'direccion': 'Dirección'
         }
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
+            'first_name': forms.TextInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
+            'last_name': forms.TextInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
+            'email': forms.EmailInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
+            'telefono': forms.TextInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
+            'direccion': forms.Textarea(attrs={'class': TAILWIND_TEXTAREA_CLASSES, 'rows': 3})
         }
         
 class RecuperarPasswordForm(forms.Form):
     email = forms.EmailField(
         label='Correo Electrónico',
         widget=forms.EmailInput(attrs={
-            'class': 'form-control',
+            'class': TAILWIND_INPUT_CLASSES,
             'placeholder': 'tucorreo@ejemplo.com'
         }),
         help_text='Ingresa el correo con el que te registraste'
@@ -168,14 +176,14 @@ class ResetPasswordForm(forms.Form):
     password1 = forms.CharField(
         label='Nueva Contraseña',
         widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
+            'class': TAILWIND_INPUT_CLASSES,
             'placeholder': 'Ingresa tu nueva contraseña'
         })
     )
     password2 = forms.CharField(
         label='Confirmar Nueva Contraseña',
         widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
+            'class': TAILWIND_INPUT_CLASSES,
             'placeholder': 'Confirma tu nueva contraseña'
         })
     )
@@ -185,13 +193,13 @@ class ProductoForm(forms.ModelForm):
         model = Producto
         fields = [ 'nombre', 'descripcion', 'precio', 'imagen', 'stock', 'categoria', 'activo' ]
         widgets = {
-                'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-                'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-                'precio': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-                # Nota: El widget para un ImageField/FileField es FileInput, no FileField
-                'imagen': forms.FileInput(attrs={'class':'form-control'}),
-                'stock': forms.NumberInput(attrs={'class': 'form-control'}),
-                'categoria':forms.Select(attrs={'class': 'form-control'}),
-                'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+                'nombre': forms.TextInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
+                'descripcion': forms.Textarea(attrs={'class': TAILWIND_TEXTAREA_CLASSES, 'rows': 3}),
+                'precio': forms.NumberInput(attrs={'class': TAILWIND_INPUT_CLASSES, 'step': '0.01'}),
+                # Nota: El widget para un ImageField/FileField es FileInput
+                'imagen': forms.FileInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
+                'stock': forms.NumberInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
+                'categoria':forms.Select(attrs={'class': TAILWIND_SELECT_CLASSES}),
+                'activo': forms.CheckboxInput(attrs={'class': TAILWIND_CHECKBOX_CLASSES}),
             }
     
