@@ -19,6 +19,32 @@ def home(request):
 
     return render(request, 'core/home.html')
 
+# ========== CATÁLOGO DE PRODUCTOS (CLIENTE) ==========
+
+def catalogo_productos_view(request):
+    """Vista para que los clientes y visitantes vean el catálogo de productos (HU10)"""
+    
+    # Solo mostramos productos activos y con stock
+    productos = Producto.objects.filter(activo=True, stock__gt=0).select_related('categoria').order_by('nombre')
+    
+    # Búsqueda
+    busqueda = request.GET.get('q', '')
+    if busqueda:
+        productos = productos.filter(nombre__icontains=busqueda)
+    
+    # Filtro por categoría
+    categoria_id = request.GET.get('categoria')
+    if categoria_id:
+        productos = productos.filter(categoria_id=categoria_id)
+    
+    contexto = {
+        'productos': productos,
+        'categorias': Categoria.objects.filter(activo=True),
+        'busqueda': busqueda,
+        'categoria_seleccionada': categoria_id
+    }
+    return render(request, 'core/catalogo_productos.html', contexto)
+
 # ========== AUTENTICACIÓN ==========
 
 def registro_view(request):
@@ -183,57 +209,120 @@ def editar_perfil_view(request):
     
     return render(request, 'core/editar_perfil.html', {'form': form})
 
-@login_required
-def admin_productos_view(request):
+# ========== CARRITO DE COMPRAS ==========
 
+@login_required
+def ver_carrito_view(request):
+    """Vista para que el usuario vea su carrito de compras (HU11)"""
+    # El carrito se crea automáticamente al registrarse.
+    # Usamos un try-except como medida de seguridad por si algo fallara.
+    try:
+        carrito = request.user.carrito
+        items = carrito.items.all().select_related('producto')
+    except Carrito.DoesNotExist:
+        # Si el carrito no existe por alguna razón, lo creamos.
+        carrito = Carrito.objects.create(usuario=request.user)
+        items = []
+
+    contexto = {
+        'carrito': carrito,
+        'items': items
+    }
+    return render(request, 'core/carrito.html', contexto)
+
+# ========== GESTIÓN DE PRODUCTOS (ADMIN) ==========
+
+@login_required
+def admin_productos_lista(request):
+    """Listar todos los productos (HU01)"""
     if request.user.rol != 'administrador':
+        messages.error(request, 'No tienes permisos para acceder aquí.')
         return redirect('home')
     
-    productos = Producto.objects.all().select_related('categoria')
+    productos = Producto.objects.all().select_related('categoria').order_by('nombre')
     
-    # Filtros
-    categoria = request.GET.get('categoria')
-    busqueda = request.GET.get('q')
-    
-    if categoria:
-        productos = productos.filter(categoria_id=categoria)
-        
+    # Búsqueda
+    busqueda = request.GET.get('q', '')
     if busqueda:
         productos = productos.filter(nombre__icontains=busqueda)
     
-    return render(request, 'core/admin/productos_lista.html', {
+    # Filtro por categoría
+    categoria_id = request.GET.get('categoria')
+    if categoria_id:
+        productos = productos.filter(categoria_id=categoria_id)
+    
+    contexto = {
         'productos': productos,
-        'categorias': Categoria.objects.filter(activo=True)
-        
-    })
-    
+        'categorias': Categoria.objects.filter(activo=True),
+        'busqueda': busqueda,
+        'categoria_seleccionada': categoria_id
+    }
+    return render(request, 'core/admin/productos_lista.html', contexto)
+
 @login_required
-def admin_producto_desactivar(request, pk):
+def admin_producto_crear(request):
+    """Crear nuevo producto (HU02)"""
     if request.user.rol != 'administrador':
+        messages.error(request, 'No tienes permisos para realizar esta acción.')
         return redirect('home')
-    producto = get_object_or_404(Producto, pk=pk)
-    producto.activo = False
-    producto.save()
     
-    messages.success(request, f'Producto "{producto.nombre}" desactivado.')
-    return redirect('admin_productos')
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES)
+        if form.is_valid():
+            producto = form.save()
+            messages.success(request, f'El producto "{producto.nombre}" ha sido creado exitosamente.')
+            return redirect('admin_productos_lista')
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    else:
+        form = ProductoForm()
+    
+    contexto = {
+        'form': form,
+        'titulo': 'Crear Nuevo Producto'
+    }
+    return render(request, 'core/admin/producto_form.html', contexto)
 
 @login_required
 def admin_producto_editar(request, pk):
+    """Editar un producto existente (HU03)"""
     if request.user.rol != 'administrador':
+        messages.error(request, 'No tienes permisos para realizar esta acción.')
         return redirect('home')
     
-    Producto = get_object_or_404(Producto, pk=pk)
+    producto = get_object_or_404(Producto, pk=pk)
     
     if request.method == 'POST':
-        form = ProductoForm(request.POST, request.FILES, instance=Producto)
+        form = ProductoForm(request.POST, request.FILES, instance=producto)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Producto actualizado exitosamente.')
-            return redirect('admin_productos')
+            messages.success(request, f'El producto "{producto.nombre}" ha sido actualizado exitosamente.')
+            return redirect('admin_productos_lista')
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
     else:
-        form = ProductoForm(instance=Producto)
-    return render(request, 'core/admin/producto_form.html',{
+        form = ProductoForm(instance=producto)
+        
+    contexto = {
         'form': form,
-        'producto': Producto
-        })
+        'producto': producto,
+        'titulo': f'Editar Producto: {producto.nombre}'
+    }
+    return render(request, 'core/admin/producto_form.html', contexto)
+
+@login_required
+def admin_producto_desactivar(request, pk):
+    """Desactiva un producto (HU04)"""
+    if request.user.rol != 'administrador':
+        messages.error(request, 'No tienes permisos para realizar esta acción.')
+        return redirect('home')
+        
+    if request.method == 'POST':
+        producto = get_object_or_404(Producto, pk=pk)
+        producto.activo = not producto.activo # Alterna el estado
+        producto.save()
+        
+        estado = "activado" if producto.activo else "desactivado"
+        messages.success(request, f'El producto "{producto.nombre}" ha sido {estado}.')
+    
+    return redirect('admin_productos_lista')

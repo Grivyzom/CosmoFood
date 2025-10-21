@@ -1,0 +1,86 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Nuestro Menú - Cosmofood{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <!-- Filtros y Búsqueda -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-filter"></i> Filtrar Productos</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{% url 'catalogo_productos' %}">
+                        <!-- Búsqueda -->
+                        <div class="mb-3">
+                            <label for="q" class="form-label fw-bold">Buscar por nombre</label>
+                            <div class="input-group">
+                                <input type="text" name="q" id="q" class="form-control" placeholder="Ej: Hamburguesa" value="{{ busqueda }}">
+                                <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Filtro por Categoría -->
+                        <div class="mb-3">
+                            <label for="categoria" class="form-label fw-bold">Categoría</label>
+                            <select name="categoria" id="categoria" class="form-select" onchange="this.form.submit()">
+                                <option value="">Todas</option>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat.id }}" {% if categoria_seleccionada == cat.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ cat.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="d-grid">
+                            <a href="{% url 'catalogo_productos' %}" class="btn btn-secondary btn-sm">Limpiar Filtros</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Listado de Productos -->
+        <div class="col-lg-9">
+            <h1 class="mb-4">Nuestro Menú</h1>
+
+            {% if not productos %}
+                <div class="alert alert-info text-center">
+                    <p class="mb-0">No se encontraron productos que coincidan con tu búsqueda.</p>
+                    <p>Intenta con otros filtros o <a href="{% url 'catalogo_productos' %}" class="alert-link">revisa nuestro menú completo</a>.</p>
+                </div>
+            {% else %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    {% for producto in productos %}
+                        <div class="col">
+                            <div class="card h-100 shadow-sm product-card">
+                                {% if producto.imagen %}
+                                    <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
+                                {% else %}
+                                    <img src="{% static 'core/img/placeholder.png' %}" class="card-img-top" alt="Imagen no disponible">
+                                {% endif %}
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ producto.nombre }}</h5>
+                                    <p class="card-text text-muted small">{{ producto.descripcion|truncatewords:15 }}</p>
+                                    <div class="mt-auto">
+                                        <p class="card-text fs-4 fw-bold text-primary">${{ producto.precio|floatformat:0 }}</p>
+                                        <div class="d-grid">
+                                            <a href="#" class="btn btn-primary">
+                                                <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
