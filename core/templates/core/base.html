@@ -185,9 +185,141 @@
     </a>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-auto">
-        <div class="container mx-auto px-4 text-center">
-            <p class="mb-0">&copy; 2025 Cosmofood. Todos los derechos reservados.</p>
+    <footer class="bg-gray-900 text-gray-300 py-12 mt-auto">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+                <!-- Columna 1: Sobre Cosmofood -->
+                <div>
+                    <h3 class="text-white text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-hamburger text-primary"></i>
+                        Cosmofood
+                    </h3>
+                    <p class="text-sm text-gray-400 mb-4">
+                        Descubre la mejor comida rápida de Valdivia. Productos frescos, entrega rápida y sabor inigualable.
+                    </p>
+                    <div class="flex gap-3">
+                        <a href="#" class="w-10 h-10 bg-gray-800 hover:bg-primary rounded-full flex items-center justify-center transition duration-300">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 hover:bg-primary rounded-full flex items-center justify-center transition duration-300">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 hover:bg-primary rounded-full flex items-center justify-center transition duration-300">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 hover:bg-primary rounded-full flex items-center justify-center transition duration-300">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Columna 2: Enlaces Rápidos -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Enlaces Rápidos</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li>
+                            <a href="{% url 'home' %}" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-home mr-2"></i>Inicio
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'catalogo_productos' %}" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-utensils mr-2"></i>Nuestro Menú
+                            </a>
+                        </li>
+                        {% if user.is_authenticated %}
+                        <li>
+                            <a href="{% url 'mis_pedidos' %}" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-shopping-bag mr-2"></i>Mis Pedidos
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'perfil' %}" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-user mr-2"></i>Mi Perfil
+                            </a>
+                        </li>
+                        {% else %}
+                        <li>
+                            <a href="{% url 'login' %}" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'registro' %}" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-user-plus mr-2"></i>Registrarse
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <!-- Columna 3: Información -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Información</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li>
+                            <a href="#" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-info-circle mr-2"></i>Acerca de
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-briefcase mr-2"></i>Trabaja con Nosotros
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-newspaper mr-2"></i>Blog
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-shield-alt mr-2"></i>Política de Privacidad
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="hover:text-primary transition duration-200">
+                                <i class="fas fa-file-contract mr-2"></i>Términos y Condiciones
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Columna 4: Contacto -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Contacto</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-map-marker-alt text-primary mt-1"></i>
+                            <span>Av. Los Lingues 1234<br>Valdivia, Chile</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fas fa-phone text-primary"></i>
+                            <a href="tel:+56912345678" class="hover:text-primary transition">+56 9 1234 5678</a>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fas fa-envelope text-primary"></i>
+                            <a href="mailto:contacto@cosmofood.cl" class="hover:text-primary transition">contacto@cosmofood.cl</a>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fas fa-clock text-primary"></i>
+                            <span>Lun - Dom: 11:00 - 23:00</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Línea divisoria -->
+            <div class="border-t border-gray-800 pt-6 mt-6">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+                    <p>&copy; 2025 Cosmofood. Todos los derechos reservados.</p>
+                    <div class="flex gap-6">
+                        <a href="#" class="hover:text-primary transition">Accesibilidad</a>
+                        <a href="#" class="hover:text-primary transition">Soporte</a>
+                        <a href="#" class="hover:text-primary transition">Mapa del Sitio</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </footer>
     
