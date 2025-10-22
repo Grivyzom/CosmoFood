@@ -9,7 +9,7 @@ from .forms import (
     RegistroForm, LoginForm, PerfilForm, ProductoForm, 
     RecuperarPasswordForm, ResetPasswordForm
 )
-from .models import Carrito, Producto, Usuario, Categoria, ItemCarrito, Pedido
+from .models import Carrito, Producto, Usuario, Categoria, ItemCarrito, Pedido, Slide
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -17,8 +17,11 @@ from django.contrib.sites.shortcuts import get_current_site
 
 # Vista de inicio (landing page)
 def home(request):
-
-    return render(request, 'core/home.html')
+    slides = Slide.objects.filter(activo=True).order_by('orden')
+    contexto = {
+        'slides': slides
+    }
+    return render(request, 'core/home.html', contexto)
 
 # ========== CATÁLOGO DE PRODUCTOS (CLIENTE) ==========
 

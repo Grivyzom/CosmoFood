@@ -260,3 +260,21 @@ class Reclamo(models.Model):
             
       def __str__(self):
             return f"#{self.id} Reclamo - {self.cliente.username}"
+
+class Slide(models.Model):
+      """Modelo para gestionar los slides del carrusel de la página de inicio."""
+      imagen = models.ImageField(upload_to='slides/', blank=True, null=True, help_text="Tamaño recomendado: 1200x600px")
+      titulo = models.CharField(max_length=100, blank=True, null=True, help_text="Título principal que aparece sobre la imagen.")
+      subtitulo = models.CharField(max_length=200, blank=True, null=True, help_text="Texto secundario debajo del título.")
+      texto_boton = models.CharField(max_length=50, default="Ver más")
+      link_boton = models.CharField(max_length=200, help_text="Enlace del botón. Ej: /catalogo/?categoria=1 o /#seccion")
+      orden = models.PositiveIntegerField(default=0, help_text="Número para ordenar los slides. Menor número aparece primero.")
+      activo = models.BooleanField(default=True, help_text="Marcar para mostrar este slide en el carrusel.")
+
+      class Meta:
+            verbose_name = 'Slide del Carrusel'
+            verbose_name_plural = 'Slides del Carrusel'
+            ordering = ['orden']
+
+      def __str__(self):
+            return self.titulo or f"Slide {self.id}"

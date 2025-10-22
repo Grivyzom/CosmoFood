@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Repartidor, Producto, Categoria, Carrito, ItemCarrito, MetodoPago, Pedido, DetallePedido, Reclamo
+from .models import Usuario, Repartidor, Producto, Categoria, Carrito, ItemCarrito, MetodoPago, Pedido, DetallePedido, Reclamo, Slide
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
@@ -65,3 +65,11 @@ class ReclamoAdmin(admin.ModelAdmin):
       list_display = ['id', 'cliente', 'pedido', 'motivo', 'estado', 'fecha_creacion']
       list_filter = ['estado', 'motivo', 'fecha_creacion']
       search_fields = ['cliente__username', 'pedido__numero_pedido']
+
+@admin.register(Slide)
+class SlideAdmin(admin.ModelAdmin):
+      list_display = ['id', 'titulo', 'orden', 'activo']
+      list_filter = ['activo']
+      search_fields = ['titulo', 'subtitulo']
+      list_editable = ['orden', 'activo']
+      ordering = ['orden']
