@@ -1,0 +1,88 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Gestión de Repartidores{% endblock %}
+
+{% block page_title %}Gestión de Repartidores{% endblock %}
+
+{% block content %}
+<div class="card table-card">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-motorcycle text-primary me-2"></i>
+            Listado de Repartidores
+        </h5>
+        {# Botón para ir al formulario de creación #}
+        <a href="{% url 'admin_repartidor_crear' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus me-1"></i>
+            Agregar Repartidor
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Nombre Completo</th>
+                        <th>Teléfono</th>
+                        <th>Vehículo</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {# Itera sobre la lista de repartidores enviada desde la vista #}
+                    {% for rep in repartidores %}
+                    <tr>
+                        <td>
+                            <span class="fw-bold">{{ rep.usuario.username }}</span>
+                        </td>
+                        <td>{{ rep.usuario.get_full_name|default:"-" }}</td>
+                        <td>{{ rep.usuario.telefono|default:"-" }}</td>
+                        <td>{{ rep.vehiculo|default:"-" }}</td>
+                        <td>
+                            {# Badge de color según el estado 'disponible' #}
+                            {% if rep.disponible %}
+                                <span class="badge rounded-pill bg-success-subtle text-success-emphasis">Disponible</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">No Disponible</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {# Grupo de botones para acciones #}
+                            <div class="btn-group btn-group-sm">
+                                <form action="{% url 'admin_repartidor_toggle' rep.usuario.pk %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    {% if rep.disponible %}
+                                        <button type="submit" class="btn btn-outline-secondary" title="Marcar como No Disponible">
+                                            <i class="fas fa-toggle-off"></i>
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-success" title="Marcar como Disponible">
+                                            <i class="fas fa-toggle-on"></i>
+                                        </button>
+                                    {% endif %}
+                                </form>
+                                <a href="{% url 'admin_repartidor_editar' rep.usuario.pk %}" class="btn btn-outline-warning" title="Editar Repartidor">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                {# Podrías añadir un botón de eliminar usuario aquí si fuera necesario #}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    {# Mensaje si no hay repartidores registrados #}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-users-slash fa-3x mb-3 d-block"></i>
+                            <h4>No hay repartidores registrados</h4>
+                            <p>Puedes agregar uno nuevo usando el botón de arriba.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

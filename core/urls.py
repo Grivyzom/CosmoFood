@@ -41,4 +41,14 @@ urlpatterns = [
     
     # Punto de Venta (POS)
     path('panel/pos/', views.pos_view, name='pos_view'),
-]
+    
+    # Gestión de Reclamos
+    path('panel/reclamos/', views.admin_reclamos_lista, name='admin_reclamos_lista'),
+    path('panel/reclamos/<int:pk_reclamo>/', views.admin_reclamo_detalle, name='admin_reclamo_detalle'),
+    
+    # Gestión de Repartidores
+    path('panel/repartidores/', views.admin_repartidores_lista, name='admin_repartidores_lista'), 
+    path('panel/repartidores/crear/', views.admin_repartidor_crear, name='admin_repartidor_crear'), 
+    path('panel/repartidores/<int:pk_usuario>/editar/', views.admin_repartidor_editar, name='admin_repartidor_editar'), 
+    path('panel/repartidores/<int:pk_usuario>/toggle/', views.admin_repartidor_toggle_disponible, name='admin_repartidor_toggle'), 
+    ]

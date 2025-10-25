@@ -1,0 +1,109 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Detalle Reclamo #{{ reclamo.id }}{% endblock %}
+
+{% block page_title %}Detalle del Reclamo #{{ reclamo.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-7 mb-4">
+        <div class="card table-card mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="card-title mb-0"><i class="fas fa-file-alt text-primary me-2"></i>Información del Reclamo</h5>
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 fw-medium text-muted">ID Reclamo:</dt>
+                    <dd class="col-sm-8 fw-bold">#{{ reclamo.id }}</dd>
+
+                    <dt class="col-sm-4 fw-medium text-muted">Fecha Creación:</dt>
+                    <dd class="col-sm-8">{{ reclamo.fecha_creacion|date:"d M Y, H:i" }}</dd>
+
+                    <dt class="col-sm-4 fw-medium text-muted">Cliente:</dt>
+                    <dd class="col-sm-8">{{ reclamo.cliente.get_full_name|default:reclamo.cliente.username }} ({{ reclamo.cliente.email }})</dd>
+
+                    <dt class="col-sm-4 fw-medium text-muted">Pedido Asociado:</dt>
+                    <dd class="col-sm-8">
+                        <a href="{% url 'admin_pedido_detalle' reclamo.pedido.pk %}" class="text-decoration-none">
+                            #{{ reclamo.pedido.numero_pedido }}
+                        </a>
+                         (Total: ${{ reclamo.pedido.total|floatformat:0 }})
+                    </dd>
+
+                    <dt class="col-sm-4 fw-medium text-muted">Motivo:</dt>
+                    <dd class="col-sm-8">{{ reclamo.get_motivo_display }}</dd>
+
+                    <dt class="col-sm-12 fw-medium text-muted mt-3">Descripción del Cliente:</dt>
+                    <dd class="col-sm-12 border p-3 rounded bg-light mt-1">{{ reclamo.descripcion|linebreaksbr }}</dd> {# linebreaksbr para respetar saltos de línea #}
+                </dl>
+            </div>
+        </div>
+
+        {% if reclamo.respuesta %}
+        <div class="card table-card mb-4">
+            <div class="card-header bg-light border-0 py-3">
+                <h5 class="card-title mb-0"><i class="fas fa-reply text-secondary me-2"></i>Respuesta Anterior</h5>
+            </div>
+            <div class="card-body p-4">
+                 <dl class="row mb-0">
+                    <dt class="col-sm-4 fw-medium text-muted">Fecha Respuesta:</dt>
+                    <dd class="col-sm-8">{{ reclamo.fecha_respuesta|date:"d M Y, H:i" }}</dd>
+
+                    <dt class="col-sm-4 fw-medium text-muted">Atendido por:</dt>
+                    <dd class="col-sm-8">{{ reclamo.atendido_por.username|default:"N/A" }}</dd>
+
+                    <dt class="col-sm-12 fw-medium text-muted mt-3">Respuesta:</dt>
+                    <dd class="col-sm-12 border p-3 rounded bg-light-subtle mt-1">{{ reclamo.respuesta|linebreaksbr }}</dd>
+                 </dl>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-5 mb-4">
+        <div class="card table-card sticky-top" style="top: 80px;">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, var(--bs-primary), var(--bs-orange, #f39c12));">
+                <h5 class="card-title mb-0 fw-bold">
+                    <i class="fas fa-edit me-2"></i>Actualizar / Responder Reclamo
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Estado Actual:</label>
+                        <p class="fs-5 mb-0">
+                            <span class="badge rounded-pill
+                                {% if reclamo.estado == 'nuevo' %} bg-danger
+                                {% elif reclamo.estado == 'en_revision' %} bg-warning text-dark
+                                {% elif reclamo.estado == 'respondido' %} bg-info
+                                {% elif reclamo.estado == 'resuelto' %} bg-success
+                                {% elif reclamo.estado == 'cerrado' %} bg-secondary
+                                {% else %} bg-light text-dark {% endif %}">
+                                {{ reclamo.get_estado_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estadoSelect" class="form-label">Cambiar Estado a:</label>
+                        <select name="estado" id="estadoSelect" class="form-select">
+                            {% for value, display in estados_posibles %}
+                                <option value="{{ value }}" {% if reclamo.estado == value %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="respuestaAdmin" class="form-label">Respuesta para el Cliente (Opcional):</label>
+                        <textarea name="respuesta" id="respuestaAdmin" class="form-control" rows="5" placeholder="Escribe aquí tu respuesta o solución...">{{ reclamo.respuesta|default:"" }}</textarea> 
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </form>
+                <hr>
+                <a href="{% url 'admin_reclamos_lista' %}" class="btn btn-outline-secondary w-100 btn-sm"><i class="fas fa-arrow-left me-2"></i>Volver al Listado de Reclamos</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

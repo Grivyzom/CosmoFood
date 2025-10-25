@@ -1,0 +1,102 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Gestión de Reclamos{% endblock %}
+
+{% block page_title %}Gestión de Reclamos{% endblock %}
+
+{% block content %}
+<div class="card table-card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{% url 'admin_reclamos_lista' %}">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label for="estado" class="form-label">Filtrar por Estado</label>
+                    <select name="estado" id="estado" class="form-select form-select-sm">
+                        <option value="">Todos los estados</option>
+                        {% for value, display in estados_posibles %}
+                            <option value="{{ value }}" {% if value == estado_seleccionado %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-filter me-1"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-comment-dots text-primary me-2"></i>
+            Listado de Reclamos
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Reclamo</th>
+                        <th>Cliente</th>
+                        <th>Nº Pedido</th>
+                        <th>Motivo</th>
+                        <th>Fecha Creación</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reclamo in reclamos %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'admin_reclamo_detalle' reclamo.pk %}" class="fw-bold text-decoration-none">
+                                #{{ reclamo.id }}
+                            </a>
+                        </td>
+                        <td>{{ reclamo.cliente.username }}</td>
+                        <td>
+                            {# Enlace al detalle del pedido asociado #}
+                            <a href="{% url 'admin_pedido_detalle' reclamo.pedido.pk %}" class="text-decoration-none" title="Ver pedido">
+                                #{{ reclamo.pedido.numero_pedido }}
+                            </a>
+                        </td>
+                        <td>{{ reclamo.get_motivo_display }}</td>
+                        <td>{{ reclamo.fecha_creacion|date:"d M Y, H:i" }}</td>
+                        <td>
+                            {# Badge con color según estado del reclamo #}
+                            <span class="badge rounded-pill
+                                {% if reclamo.estado == 'nuevo' %} bg-danger
+                                {% elif reclamo.estado == 'en_revision' %} bg-warning text-dark
+                                {% elif reclamo.estado == 'respondido' %} bg-info
+                                {% elif reclamo.estado == 'resuelto' %} bg-success
+                                {% elif reclamo.estado == 'cerrado' %} bg-secondary
+                                {% else %} bg-light text-dark {% endif %}">
+                                {{ reclamo.get_estado_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {# Botón para ir al detalle del reclamo #}
+                            <a href="{% url 'admin_reclamo_detalle' reclamo.pk %}" class="btn btn-outline-primary btn-sm" title="Ver Detalles y Responder">
+                                <i class="fas fa-eye"></i> Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fas fa-comment-slash fa-3x mb-3 d-block"></i>
+                            <h4>No hay reclamos que mostrar</h4>
+                            <p>Parece que todo está en orden.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

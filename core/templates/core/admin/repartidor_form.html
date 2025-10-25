@@ -1,0 +1,161 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card table-card">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="card-title mb-0">
+                    {# Icono cambia si es crear o editar #}
+                    {% if repartidor_usuario %}
+                        <i class="fas fa-edit text-primary me-2"></i>Editando a: {{ repartidor_usuario.username }}
+                    {% else %}
+                        <i class="fas fa-user-plus text-primary me-2"></i>Nuevo Repartidor
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                {# El formulario envía los datos a la misma URL (create o edit) #}
+                <form method="POST">
+                    {% csrf_token %}
+
+                    {# Muestra errores generales del formulario si los hay #}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {# --- Campos del Usuario --- #}
+                    <h6 class="text-muted mb-3">Datos de la Cuenta</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold">{{ form.username.label }}</label>
+                            {# Renderiza el campo username con clases Bootstrap #}
+                            {{ form.username }}
+                            {# Muestra errores específicos del campo #}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                         <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold">{{ form.first_name.label }}</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold">{{ form.last_name.label }}</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                     <div class="mb-3">
+                        <label for="{{ form.telefono.id_for_label }}" class="form-label fw-semibold">{{ form.telefono.label }}</label>
+                        {{ form.telefono }}
+                        {% if form.telefono.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.telefono.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label fw-semibold">{{ form.password.label }}</label>
+                            {{ form.password }}
+                            <div class="form-text">{{ form.password.help_text }}</div>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                         <div class="col-md-6 mb-3">
+                            <label for="{{ form.password_confirm.id_for_label }}" class="form-label fw-semibold">{{ form.password_confirm.label }}</label>
+                            {{ form.password_confirm }}
+                            {% if form.password_confirm.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password_confirm.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    {# --- Campos del Repartidor --- #}
+                    <h6 class="text-muted mb-3">Datos del Repartidor</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.vehiculo.id_for_label }}" class="form-label fw-semibold">{{ form.vehiculo.label }}</label>
+                            {{ form.vehiculo }}
+                             {% if form.vehiculo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.vehiculo.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.placa_vehiculo.id_for_label }}" class="form-label fw-semibold">{{ form.placa_vehiculo.label }}</label>
+                            {{ form.placa_vehiculo }}
+                             {% if form.placa_vehiculo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.placa_vehiculo.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {# Renderiza el checkbox como un switch #}
+                            {{ form.disponible }}
+                            <label class="form-check-label" for="{{ form.disponible.id_for_label }}">{{ form.disponible.label }}</label>
+                        </div>
+                         {% if form.disponible.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.disponible.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {# Botones de Acción #}
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <a href="{% url 'admin_repartidores_lista' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

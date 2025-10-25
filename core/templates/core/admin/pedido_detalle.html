@@ -14,7 +14,7 @@
                     Productos del Pedido
                 </h5>
             </div>
-            <div class="card-body p-3"> {# Menos padding para items #}
+            <div class="card-body p-3">
                 {% for detalle in pedido.detalles.all %}
                 <div class="d-flex align-items-center justify-content-between {% if not forloop.last %}border-bottom pb-3 mb-3{% endif %}">
                     <div class="d-flex align-items-center">
@@ -47,10 +47,9 @@
                     Información del Cliente
                 </h5>
             </div>
-            <div class="card-body p-4"> {# Más padding aquí #}
+            <div class="card-body p-4">
                 <dl class="row mb-0">
                     <dt class="col-sm-4 fw-medium text-muted">Nombre:</dt>
-                    {# Muestra nombre de referencia si existe, si no, nombre de usuario #}
                     <dd class="col-sm-8">{{ pedido.nombre_referencia_cliente|default:pedido.cliente.get_full_name|default:pedido.cliente.username }}</dd>
 
                     <dt class="col-sm-4 fw-medium text-muted">Email:</dt>
@@ -80,10 +79,10 @@
             <div class="card-body p-4">
                 <form method="post">
                     {% csrf_token %}
+                    <input type="hidden" name="action" value="cambiar_estado"> 
                     <div class="mb-3">
                         <label for="estadoActual" class="form-label fw-bold">Estado Actual:</label>
                         <p class="fs-5 mb-0" id="estadoActual">
-                            {# Badge con color según estado #}
                             <span class="badge rounded-pill {% if pedido.estado == 'pendiente' %}bg-warning text-dark{% elif pedido.estado == 'confirmado' %}bg-info{% elif pedido.estado == 'en_preparacion' %}bg-secondary{% elif pedido.estado == 'listo' %}bg-primary{% elif pedido.estado == 'en_camino' %}bg-dark{% elif pedido.estado == 'entregado' %}bg-success{% elif pedido.estado == 'cancelado' %}bg-danger{% endif %}">
                                 {{ pedido.get_estado_display }}
                             </span>
@@ -91,14 +90,16 @@
                     </div>
                     <div class="mb-3">
                         <label for="estadoSelect" class="form-label">Cambiar a:</label>
-                        {# Dropdown para seleccionar nuevo estado #}
                         <select name="estado" id="estadoSelect" class="form-select">
                             {% for value, display in estados_posibles %}
-                                <option value="{{ value }}" {% if pedido.estado == value %}selected{% endif %}>{{ display }}</option>
+                                {% if pedido.tipo_orden == 'delivery' or value != 'en_camino' %}
+                                    <option value="{{ value }}" {% if pedido.estado == value %}selected{% endif %}>
+                                        {{ display }}
+                                    </option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
-                    {# Botón para enviar el formulario #}
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-save me-2"></i>Actualizar Estado
                     </button>
@@ -106,6 +107,53 @@
             </div>
         </div>
 
+        {% if pedido.tipo_orden == 'delivery' %} 
+            <div class="card table-card mb-4">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="fas fa-motorcycle text-primary me-2"></i>
+                        Asignar Repartidor
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="asignar_repartidor"> 
+
+                        <div class="mb-3">
+                            <label for="repartidorActual" class="form-label fw-bold">Repartidor Actual:</label>
+                            <p id="repartidorActual" class="fs-5 mb-0">
+                                {% if pedido.repartidor %}
+                                    <span class="badge bg-info text-dark rounded-pill">
+                                        <i class="fas fa-user me-1"></i>
+                                        {{ pedido.repartidor.usuario.username }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary rounded-pill">Ninguno asignado</span>
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="repartidorSelect" class="form-label">Asignar a:</label>
+                            <select name="repartidor_asignado" id="repartidorSelect" class="form-select">
+                                <option value="">-- Ninguno --</option>
+                                {% for rep in repartidores_disponibles %}
+                                    <option value="{{ rep.usuario.pk }}" {% if pedido.repartidor and pedido.repartidor.usuario.pk == rep.usuario.pk %}selected{% endif %}>
+                                        {{ rep.usuario.username }} ({{ rep.vehiculo|default:"S/V" }})
+                                    </option>
+                                {% empty %}
+                                    <option value="" disabled>No hay repartidores disponibles</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-check me-2"></i>Asignar / Cambiar Repartidor
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %} 
         <div class="card table-card mb-4">
             <div class="card-header bg-light border-0 py-3">
                 <h5 class="card-title mb-0">
@@ -131,14 +179,12 @@
                     <span class="text-muted">Método Pago:</span>
                     <span class="fw-semibold">{{ pedido.metodo_pago.nombre }}</span>
                 </div>
-                 <div class="d-flex justify-content-between mt-1"> {# Añadido para fecha #}
+                 <div class="d-flex justify-content-between mt-1">
                     <span class="text-muted small">Fecha Creación:</span>
                     <span class="fw-semibold small">{{ pedido.fecha_creacion|date:"d M Y, H:i" }}</span>
                 </div>
             </div>
         </div>
-        {# Botón para volver al listado (Opcional, ya que está en sidebar) #}
-        {# <a href="{% url 'admin_pedidos_lista' %}" class="btn btn-outline-secondary w-100"><i class="fas fa-arrow-left me-2"></i>Volver al Listado</a> #}
     </div>
 </div>
 {% endblock %}

@@ -235,6 +235,11 @@
             <a class="nav-link {% if request.resolver_match.url_name == 'pos_view' %}active{% endif %}" href="{% url 'pos_view' %}">
                 <i class="fas fa-cash-register fa-fw me-2"></i>Punto de Venta
             </a>
+            <a class="nav-link {% if 'repartidor' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_repartidores_lista' %}">
+                <i class="fas fa-motorcycle fa-fw me-2"></i>Repartidores
+            <a class="nav-link {% if 'reclamo' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_reclamos_lista' %}">
+                <i class="fas fa-comment-dots fa-fw me-2"></i>Reclamos
+            </a>
         </nav>
 
         <div class="p-3 border-top border-secondary">
