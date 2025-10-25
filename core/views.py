@@ -14,6 +14,10 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.sites.shortcuts import get_current_site
+from django.utils import timezone
+from django.db.models import Sum
+from datetime import timedelta
+import json
 
 # Vista de inicio (landing page)
 def home(request):
@@ -104,7 +108,7 @@ def login_view(request):
                 
                 # Redirigir según el rol del usuario
                 if user.rol == 'administrador':
-                    return redirect('admin:index')
+                    return redirect('admin_dashboard')
                 else:
                     return redirect('home')
             else:
@@ -335,34 +339,155 @@ def eliminar_item_carrito_view(request):
             messages.error(request, "Acción no permitida.")
     return redirect('ver_carrito')
 
+# ========== DASHBOARD (ADMIN) ==========
+
+@login_required
+def admin_dashboard_view(request):
+    """Muestra el panel principal del administrador con estadísticas."""
+    if request.user.rol != 'administrador':
+        messages.error(request, 'No tienes permisos para acceder aquí.')
+        return redirect('home')
+
+    # --- Cálculos para las 4 Tarjetas ---
+    today = timezone.now().date()
+    
+    # 1. Ventas de Hoy
+    ventas_hoy = Pedido.objects.filter(
+        fecha_creacion__date=today,
+        estado__in=['confirmado', 'en_preparacion', 'listo', 'en_camino', 'entregado']
+    ).aggregate(total_ventas=Sum('total'))['total_ventas'] or 0
+
+    # 2. Pedidos de Hoy
+    pedidos_hoy = Pedido.objects.filter(fecha_creacion__date=today).count()
+
+    # 3. Clientes Totales
+    total_clientes = Usuario.objects.filter(rol='cliente').count()
+
+    # 4. Productos Activos
+    total_productos_activos = Producto.objects.filter(activo=True).count()
+    
+    # 5. (Bonus) Pedidos pendientes para la lista
+    pedidos_recientes = Pedido.objects.filter(
+        estado__in=['confirmado', 'en_preparacion']
+    ).order_by('-fecha_creacion')[:5] # 5 más recientes
+
+    # --- CÁLCULO PARA EL GRÁFICO "Ventas de la Semana" ---
+    
+    # 1. Preparamos las fechas de los últimos 7 días
+    dias = []
+    ventas_por_dia = []
+    # Obtenemos los 7 días (desde hoy hacia atrás)
+    for i in range(7):
+        dia = today - timedelta(days=i)
+        dias.append(dia.strftime('%a')) # 'Lun', 'Mar', 'Mié', etc.
+        
+        # 2. Calculamos las ventas para ESE día
+        ventas_dia = Pedido.objects.filter(
+            fecha_creacion__date=dia,
+            estado__in=['confirmado', 'en_preparacion', 'listo', 'en_camino', 'entregado']
+        ).aggregate(total=Sum('total'))['total'] or 0
+        
+        ventas_por_dia.append(float(ventas_dia)) # Convertimos a float para JS
+
+    # 3. Invertimos las listas para que el gráfico muestre del más antiguo al más nuevo
+    dias.reverse()
+    ventas_por_dia.reverse()
+    # --- Fin del cálculo del gráfico ---
+
+    contexto = {
+        'ventas_hoy': ventas_hoy,
+        'pedidos_hoy': pedidos_hoy,
+        'total_clientes': total_clientes,
+        'total_productos_activos': total_productos_activos,
+        'pedidos_recientes': pedidos_recientes,
+        'titulo': 'Dashboard',
+        
+        # 4. Pasamos los datos del gráfico a la plantilla
+        # Usamos json.dumps para pasar la lista de Python a un array de JavaScript
+        'chart_labels': json.dumps(dias),
+        'chart_data': json.dumps(ventas_por_dia),
+    }
+    
+    return render(request, 'core/admin/dashboard.html', contexto)
+
+
+
 # ========== GESTIÓN DE PRODUCTOS (ADMIN) ==========
 
 @login_required
 def admin_productos_lista(request):
-    """Listar todos los productos (HU01)"""
+    """Listar todos los productos (HU01) y mostrar estadísticas."""
     if request.user.rol != 'administrador':
         messages.error(request, 'No tienes permisos para acceder aquí.')
         return redirect('home')
     
-    productos = Producto.objects.all().select_related('categoria').order_by('nombre')
+    # Obtenemos la base de productos (todos)
+    productos_base = Producto.objects.all().select_related('categoria')
+    
+    # --- Cálculo de Estadísticas para las Tarjetas ---
+    total_productos = productos_base.count()
+    productos_activos = productos_base.filter(activo=True).count()
+    stock_bajo = productos_base.filter(activo=True, stock__lte=10).count() 
+    total_categorias = Categoria.objects.filter(activo=True).count()
+    # --- FIN Cálculo ---
+
+    # Aplicamos filtros sobre la base
+    productos_filtrados = productos_base # Empezamos con todos
     
     # Búsqueda
     busqueda = request.GET.get('q', '')
     if busqueda:
-        productos = productos.filter(nombre__icontains=busqueda)
+        productos_filtrados = productos_filtrados.filter(
+            models.Q(nombre__icontains=busqueda) | 
+            models.Q(descripcion__icontains=busqueda) 
+        )
     
-    # Filtro por categoría
+    # Filtro por categoría (usando el ID)
     categoria_id = request.GET.get('categoria')
     if categoria_id:
-        productos = productos.filter(categoria_id=categoria_id)
-    
+        try:
+            productos_filtrados = productos_filtrados.filter(categoria_id=int(categoria_id))
+        except (ValueError, TypeError):
+            pass 
+            
+    # Filtro por estado (activo/inactivo/stock bajo)
+    status_filter = request.GET.get('status', 'all') 
+    if status_filter == 'active':
+        productos_filtrados = productos_filtrados.filter(activo=True)
+    elif status_filter == 'inactive':
+        productos_filtrados = productos_filtrados.filter(activo=False)
+    elif status_filter == 'low-stock':
+         productos_filtrados = productos_filtrados.filter(activo=True, stock__lte=10)
+         
+    # Ordenamiento
+    sort_by = request.GET.get('sort', 'nombre') 
+    if sort_by == 'precio':
+        productos_filtrados = productos_filtrados.order_by('precio')
+    elif sort_by == 'stock':
+        productos_filtrados = productos_filtrados.order_by('stock')
+    elif sort_by == 'categoria':
+        productos_filtrados = productos_filtrados.order_by('categoria__nombre')
+    else: 
+        productos_filtrados = productos_filtrados.order_by('nombre')
+        
     contexto = {
-        'productos': productos,
-        'categorias': Categoria.objects.filter(activo=True),
+        'productos': productos_filtrados, 
+        'categorias': Categoria.objects.filter(activo=True).order_by('nombre'),
         'busqueda': busqueda,
-        'categoria_seleccionada': categoria_id
+        'categoria_seleccionada': categoria_id, 
+        'status_filter': status_filter, 
+        'sort_by': sort_by, 
+        
+        # --- Enviamos las estadísticas ---
+        'total_productos': total_productos,
+        'productos_activos': productos_activos,
+        'stock_bajo': stock_bajo,
+        'total_categorias': total_categorias,
+        'titulo': 'Gestión de Productos' 
     }
     return render(request, 'core/admin/productos_lista.html', contexto)
+
+# --- CRUD de Productos ---
 
 @login_required
 def admin_producto_crear(request):
@@ -380,13 +505,15 @@ def admin_producto_crear(request):
         else:
             messages.error(request, 'Por favor corrige los errores en el formulario.')
     else:
+        # Pasamos las categorías al formulario para el dropdown
         form = ProductoForm()
+        form.fields['categoria'].queryset = Categoria.objects.filter(activo=True).order_by('nombre') 
     
     contexto = {
         'form': form,
         'titulo': 'Crear Nuevo Producto'
     }
-    return render(request, 'core/admin/producto_form.html', contexto)
+    return render(request, 'core/admin/producto_form.html', contexto) # Usa la plantilla correcta
 
 @login_required
 def admin_producto_editar(request, pk):
@@ -407,6 +534,7 @@ def admin_producto_editar(request, pk):
             messages.error(request, 'Por favor corrige los errores en el formulario.')
     else:
         form = ProductoForm(instance=producto)
+        form.fields['categoria'].queryset = Categoria.objects.filter(activo=True).order_by('nombre')
         
     contexto = {
         'form': form,
@@ -417,7 +545,7 @@ def admin_producto_editar(request, pk):
 
 @login_required
 def admin_producto_desactivar(request, pk):
-    """Desactiva un producto (HU04)"""
+    """Activa o Desactiva un producto (HU04)""" # Texto actualizado
     if request.user.rol != 'administrador':
         messages.error(request, 'No tienes permisos para realizar esta acción.')
         return redirect('home')
@@ -430,6 +558,7 @@ def admin_producto_desactivar(request, pk):
         estado = "activado" if producto.activo else "desactivado"
         messages.success(request, f'El producto "{producto.nombre}" ha sido {estado}.')
     
+    # Redirigimos de vuelta a la lista (mejor que al home)
     return redirect('admin_productos_lista')
 
 # ========== GESTIÓN DE PEDIDOS (ADMIN) ==========

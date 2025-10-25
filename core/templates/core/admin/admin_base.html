@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Panel Admin{% endblock %} - Cosmofood</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome (Iconos) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js (Para gráficos) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <style>
+        /* --- Fuentes y Colores Base --- */
+        :root {
+            --bs-primary-rgb: 255, 107, 53;
+            --bs-primary: #ff6b35;
+            --bs-primary-dark: #e55a2e;
+            --bs-secondary-rgb: 44, 62, 80;
+            --bs-secondary: #2c3e50;
+        }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+
+        /* --- Barra Lateral (Sidebar) --- */
+        .sidebar {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh; width: 250px; position: fixed;
+            top: 0; left: 0; z-index: 1050; transition: left 0.3s ease;
+        }
+        .sidebar-brand { color: var(--bs-primary) !important; font-weight: bold; font-size: 1.5rem; }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8); padding: 12px 20px;
+            margin: 2px 10px; border-radius: 8px; transition: all 0.2s ease-in-out;
+        }
+        .sidebar .nav-link i.fa-fw { transition: color 0.2s ease-in-out; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 107, 53, 0.15); color: var(--bs-primary);
+            transform: translateX(5px);
+        }
+        .sidebar .nav-link:hover i.fa-fw, .sidebar .nav-link.active i.fa-fw {
+             color: var(--bs-primary); /* Icono Naranja en hover/active */
+        }
+        /* Botón Cerrar Sesión corregido */
+         .sidebar .logout-link {
+             background-color: rgba(220, 53, 69, 0.1);
+             border: 1px solid rgba(220, 53, 69, 0.3);
+             color: #dc3545 !important;
+             text-align: center;
+         }
+         .sidebar .logout-link:hover {
+             background-color: rgba(220, 53, 69, 0.2);
+             color: #b02a37 !important;
+             transform: translateX(0);
+         }
+
+        /* --- Contenido Principal y Barra Superior --- */
+        .main-content { margin-left: 250px; padding-bottom: 2rem; transition: margin-left 0.3s ease; }
+        .navbar-admin { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        /* --- Tarjetas de Estadísticas (KPIs) --- */
+        .card-metric {
+            background: linear-gradient(135deg, var(--bg-from, #6c757d), var(--bg-to, #495057)); /* Color gris por defecto */
+            color: white; border: none; border-radius: 15px;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .card-metric:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        /* Clases de color que DEBEN aplicarse en el HTML de las plantillas hijas */
+        .stats-revenue { --bg-from: #ff6b35; --bg-to: #f39c12;} /* Naranja */
+        .stats-orders { --bg-from: #1abc9c; --bg-to: #16a085;} /* Turquesa */
+        .stats-customers { --bg-from: #3498db; --bg-to: #2980b9;} /* Azul */
+        .stats-products { --bg-from: #9b59b6; --bg-to: #8e44ad;} /* Morado */
+        /* Texto dentro */
+        .card-metric .card-body h6 { font-size: 0.875rem; margin-bottom: 0.5rem; opacity: 0.85; }
+        .card-metric .card-body h2 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+        .card-metric .card-body small { font-size: 0.75rem; opacity: 0.75; }
+
+        /* --- Tarjetas Generales (Filtros, Tablas) --- */
+        .table-card { border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); background-color: white; border: none; }
+
+        /* --- Botones --- */
+        .btn-primary {
+             background-color: var(--bs-primary) !important; border-color: var(--bs-primary) !important;
+             color: white !important; transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+             background-color: var(--bs-primary-dark) !important; border-color: var(--bs-primary-dark) !important;
+             transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 107, 53, 0.4);
+        }
+        /* Botones Categoría */
+        .btn-check:checked + .btn-outline-primary.rounded-pill,
+        .btn-primary.rounded-pill {
+            background-color: var(--bs-primary) !important; border-color: var(--bs-primary) !important;
+            color: white !important;
+        }
+        .btn-outline-primary { color: var(--bs-primary) !important; border-color: var(--bs-primary) !important; }
+        .btn-outline-primary:hover { background-color: var(--bs-primary) !important; border-color: var(--bs-primary) !important; color: white !important; }
+        .btn-outline-secondary.rounded-pill { color: #6c757d; border-color: #ced4da; }
+        .btn-outline-secondary.rounded-pill:hover { background-color: #f8f9fa; color: #495057; }
+        /* Botones Acción Rápida */
+        .quick-action {
+            background: linear-gradient(135deg, var(--bs-primary), var(--bs-orange, #f39c12));
+            border: none; border-radius: 12px; color: white; transition: all 0.3s ease; padding: 1rem;
+        }
+        .quick-action:hover {
+            background: linear-gradient(135deg, var(--bs-primary-dark), #f39c12);
+            transform: translateY(-2px); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .quick-action i { transition: transform 0.3s ease; }
+        .quick-action:hover i { transform: scale(1.1); }
+
+        /* --- Otros Elementos --- */
+        .activity-item { border-left: 3px solid var(--bs-primary); padding-left: 15px; margin-bottom: 15px; }
+        .table-dark { background-color: #343a40 !important; color: #fff; }
+        .chart-container { position: relative; }
+
+        /* --- Responsividad Sidebar --- */
+        @media (max-width: 991.98px) {
+            .sidebar { left: -250px; }
+            .sidebar.show { left: 0; }
+            .main-content { margin-left: 0 !important; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1040; }
+            .overlay.show { display: block; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="sidebar d-flex flex-column" id="sidebar">
+        <div class="p-4">
+            <a class="sidebar-brand d-flex align-items-center text-decoration-none mb-1" href="{% url 'admin_dashboard' %}">
+                <i class="fas fa-utensils me-2"></i>
+                <span>Cosmofood</span>
+            </a>
+            <small class="text-white-50">Panel Administrativo</small>
+        </div>
+
+        <nav class="nav flex-column flex-grow-1">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
+                <i class="fas fa-tachometer-alt fa-fw me-2"></i>Dashboard
+            </a>
+            <a class="nav-link {% if 'pedido' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_pedidos_lista' %}">
+                <i class="fas fa-clipboard-list fa-fw me-2"></i>Pedidos
+            </a>
+            <a class="nav-link {% if 'producto' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_productos_lista' %}">
+                <i class="fas fa-box fa-fw me-2"></i>Productos
+            </a>
+        </nav>
+
+        <div class="p-4 mt-auto">
+             <a class="nav-link logout-link rounded-3 mb-2" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt fa-fw me-2"></i>Cerrar Sesión
+            </a>
+            <hr class="text-white-50 my-2">
+            <a class="nav-link text-center" href="{% url 'home' %}" target="_blank" title="Abrir sitio cliente">
+                <i class="fas fa-globe fa-fw me-2"></i>Ver Sitio Cliente
+            </a>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="main-content">
+        <nav class="navbar navbar-expand-lg navbar-admin sticky-top mb-4 py-2 px-3">
+            <div class="container-fluid p-0">
+                <button class="btn btn-outline-secondary d-lg-none me-2" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                <h4 class="mb-0 fw-bold me-auto">{% block page_title %}Dashboard{% endblock %}</h4>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-2 py-1">
+                        <i class="fas fa-circle fa-xs me-1" style="font-size: 0.6em;"></i>En línea
+                    </span>
+                    <div class="dropdown">
+                         <button class="btn btn-outline-secondary position-relative rounded-circle" data-bs-toggle="dropdown" style="width: 40px; height: 40px;" title="Notificaciones">
+                            <i class="fas fa-bell"></i>
+                            {# Reemplaza '0' con la variable de Django que contenga el número de notificaciones #}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                         </button>
+                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="width: 300px;">
+                            <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                            <li><a class="dropdown-item small" href="#">No hay notificaciones nuevas</a></li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li><a class="dropdown-item text-center text-muted small" href="#">Ver todas</a></li>
+                         </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center rounded-pill ps-2 pe-3 py-1" data-bs-toggle="dropdown">
+                           <i class="fas fa-user-circle fa-lg me-2"></i>
+                            <span class="fw-bold small">{{ user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                            <li><a class="dropdown-item small" href="#"><i class="fas fa-user fa-fw me-2"></i>Mi Perfil</a></li>
+                            <li><a class="dropdown-item small" href="#"><i class="fas fa-cog fa-fw me-2"></i>Ajustes</a></li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li><a class="dropdown-item text-danger small" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt fa-fw me-2"></i>Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show shadow-sm border-0" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        if (sidebarToggle && sidebar && overlay) {
+            sidebarToggle.addEventListener('click', function() { sidebar.classList.toggle('show'); overlay.classList.toggle('show'); });
+            overlay.addEventListener('click', function() { sidebar.classList.remove('show'); overlay.classList.remove('show'); });
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992 && sidebar.classList.contains('show')) { sidebar.classList.remove('show'); overlay.classList.remove('show'); }
+                });
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

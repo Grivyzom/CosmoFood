@@ -1,0 +1,230 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Gestión de Productos{% endblock %}
+
+{% block page_title %}Gestión de Productos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card card-metric stats-revenue h-100"> {# Naranja #}
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Total Productos</h6>
+                        <h2>{{ total_productos }}</h2>
+                        <small>En catálogo</small>
+                    </div>
+                    <i class="fas fa-box fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card card-metric stats-orders h-100"> {# Turquesa #}
+             <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Activos</h6>
+                        <h2>{{ productos_activos }}</h2>
+                        <small>Disponibles</small>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card card-metric stats-customers h-100"> {# Azul #}
+             <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Stock Bajo</h6>
+                        <h2>{{ stock_bajo }}</h2>
+                        <small>Requieren atención</small>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card card-metric stats-products h-100"> {# Morado #}
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Categorías</h6>
+                        <h2>{{ total_categorias }}</h2>
+                        <small>Diferentes tipos</small>
+                    </div>
+                    <i class="fas fa-tags fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card table-card">
+            <div class="card-body">
+                <form method="GET" action="{% url 'admin_productos_lista' %}" id="filterForm">
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                        <h6 class="mb-0 me-2 fw-bold">Categoría:</h6>
+                        <div class="btn-group flex-wrap" role="group">
+                            <input type="radio" class="btn-check" name="categoria" id="cat-all" value="" autocomplete="off" {% if not categoria_seleccionada %}checked{% endif %} onchange="submitFilterForm()">
+                            <label class="btn btn-sm btn-outline-primary rounded-pill px-3 me-1 mb-1" for="cat-all">
+                                <i class="fas fa-th me-1"></i>Todos
+                            </label>
+                            {% for c in categorias %}
+                                <input type="radio" class="btn-check" name="categoria" id="cat-{{ c.id }}" value="{{ c.id }}" autocomplete="off" {% if c.id|stringformat:'s' == categoria_seleccionada %}checked{% endif %} onchange="submitFilterForm()">
+                                <label class="btn btn-sm btn-outline-primary rounded-pill px-3 me-1 mb-1" for="cat-{{ c.id }}">
+                                    <i class="fas fa-tag me-1"></i>{{ c.nombre }}
+                                </label>
+                            {% endfor %}
+                        </div>
+
+                        <div class="ms-auto d-flex gap-2" style="min-width: 400px;">
+                            <select class="form-select form-select-sm" name="status" onchange="submitFilterForm()">
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Todos los estados</option>
+                                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Activos</option>
+                                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactivos</option>
+                                <option value="low-stock" {% if status_filter == 'low-stock' %}selected{% endif %}>Stock bajo</option>
+                            </select>
+                            <select class="form-select form-select-sm" name="sort" onchange="submitFilterForm()">
+                                <option value="nombre" {% if sort_by == 'nombre' %}selected{% endif %}>Ordenar por nombre</option>
+                                <option value="precio" {% if sort_by == 'precio' %}selected{% endif %}>Ordenar por precio</option>
+                                <option value="stock" {% if sort_by == 'stock' %}selected{% endif %}>Ordenar por stock</option>
+                                <option value="categoria" {% if sort_by == 'categoria' %}selected{% endif %}>Ordenar por categoría</option>
+                            </select>
+                            <input type="hidden" name="q" value="{{ busqueda }}">
+                        </div>
+                    </div>
+                 </form>
+                 <form method="GET" action="{% url 'admin_productos_lista' %}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" placeholder="Buscar por nombre o descripción..." value="{{ busqueda }}">
+                        <input type="hidden" name="categoria" value="{{ categoria_seleccionada }}">
+                        <input type="hidden" name="status" value="{{ status_filter }}">
+                        <input type="hidden" name="sort" value="{{ sort_by }}">
+                        <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card table-card">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list text-primary me-2"></i>
+                    Listado de Productos
+                </h5>
+                <a href="{% url 'admin_producto_crear' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Agregar Producto
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 80px;">Imagen</th>
+                                <th>Producto</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for producto in productos %}
+                            <tr>
+                                <td>
+                                    {% if producto.imagen %}
+                                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                                    {% else %}
+                                        <div class="bg-light d-flex align-items-center justify-content-center text-muted" style="width: 50px; height: 50px; border-radius: 8px;">
+                                            <i class="fas fa-image fa-lg"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ producto.nombre }}</div>
+                                    <small class="text-muted d-block" style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ producto.descripcion|default:"Sin descripción" }}
+                                    </small>
+                                </td>
+                                <td><span class="badge bg-secondary-subtle text-secondary-emphasis">{{ producto.categoria.nombre|default:"N/A" }}</span></td>
+                                <td>${{ producto.precio|floatformat:0 }}</td>
+                                <td>
+                                    <span class="fw-bold {% if producto.stock <= 10 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ producto.stock }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if producto.activo %}
+                                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis">Activo</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <form action="{% url 'admin_producto_desactivar' producto.pk %}" method="POST" class="d-inline">
+                                            {% csrf_token %}
+                                            {% if producto.activo %}
+                                                <button type="submit" class="btn btn-outline-danger" title="Desactivar">
+                                                    <i class="fas fa-toggle-off"></i>
+                                                </button>
+                                            {% else %}
+                                                <button type="submit" class="btn btn-outline-success" title="Activar">
+                                                    <i class="fas fa-toggle-on"></i>
+                                                </button>
+                                            {% endif %}
+                                        </form>
+                                        <a href="{% url 'admin_producto_editar' producto.pk %}" class="btn btn-outline-warning" title="Editar">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
+                                    <h4>No se encontraron productos</h4>
+                                    <p>Intenta ajustar los filtros o agrega un nuevo producto.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function submitFilterForm() {
+        const selectedCategory = document.querySelector('input[name="categoria"]:checked');
+        let categoryValue = '';
+        if (selectedCategory) { categoryValue = selectedCategory.value; }
+        const url = new URL(window.location);
+        url.searchParams.set('status', document.querySelector('select[name="status"]').value);
+        url.searchParams.set('sort', document.querySelector('select[name="sort"]').value);
+        url.searchParams.set('q', document.querySelector('input[name="q"][type="hidden"]').value);
+        if (categoryValue) { url.searchParams.set('categoria', categoryValue); }
+        else { url.searchParams.delete('categoria'); }
+        window.location.href = url.toString();
+    }
+</script>
+{% endblock %}

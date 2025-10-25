@@ -1,0 +1,209 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Dashboard Admin{% endblock %}
+
+{% block page_title %}Panel Administrativo{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        {# Tarjeta Naranja para Ventas Hoy #}
+        <div class="card card-metric stats-revenue h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Ventas Hoy</h6>
+                        {# USA LA VARIABLE REAL #}
+                        <h2>${{ ventas_hoy|floatformat:0 }}</h2>
+                        <small>Total de ingresos del día</small>
+                    </div>
+                    <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        {# Tarjeta Turquesa para Pedidos Hoy #}
+        <div class="card card-metric stats-orders h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Pedidos Hoy</h6>
+                        {# USA LA VARIABLE REAL #}
+                        <h2>{{ pedidos_hoy }}</h2>
+                        <small>Órdenes recibidas</small>
+                    </div>
+                    <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        {# Tarjeta Azul para Clientes Total #}
+        <div class="card card-metric stats-customers h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Clientes Total</h6>
+                        {# USA LA VARIABLE REAL #}
+                        <h2>{{ total_clientes }}</h2>
+                        <small>Usuarios registrados</small>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        {# Tarjeta Morada para Productos Activos #}
+        <div class="card card-metric stats-products h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6>Productos Activos</h6>
+                        {# USA LA VARIABLE REAL #}
+                        <h2>{{ total_productos_activos }}</h2>
+                        <small>Disponibles en el menú</small>
+                    </div>
+                    <i class="fas fa-boxes fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="card table-card h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-line text-primary me-2"></i>Ventas de la Semana</h5>
+            </div>
+            <div class="card-body chart-container">
+                {# Canvas donde se dibujará el gráfico real #}
+                <canvas id="ventasSemanaChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card table-card h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="card-title mb-0"><i class="fas fa-pizza-slice text-primary me-2"></i>Productos Populares</h5>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <div class="text-muted text-center">
+                    <i class="fas fa-chart-pie fa-3x mb-2"></i>
+                    <p>(Gráfico de Dona)</p>
+                </div>
+                {# Aquí iría tu gráfico de dona (Chart.js) #}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+     <div class="col-lg-6 mb-4">
+        <div class="card table-card h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt text-primary me-2"></i>
+                    Acciones Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="{% url 'admin_pedidos_lista' %}" class="btn quick-action w-100 p-3 text-decoration-none d-block text-center">
+                            <i class="fas fa-clipboard-list fa-2x d-block mb-2"></i>
+                            <span>Ver Pedidos</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'admin_producto_crear' %}" class="btn quick-action w-100 p-3 text-decoration-none d-block text-center">
+                            <i class="fas fa-plus-circle fa-2x d-block mb-2"></i>
+                            <span>Agregar Producto</span>
+                        </a>
+                    </div>
+                    {# Puedes añadir más acciones rápidas aquí si quieres #}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card table-card h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="card-title mb-0"><i class="fas fa-exclamation-circle text-primary me-2"></i>Pedidos Pendientes</h5>
+            </div>
+            <div class="card-body">
+                {% if pedidos_recientes %} {# Usa la variable correcta #}
+                    <ul class="list-group list-group-flush">
+                        {% for pedido in pedidos_recientes %} {# Usa la variable correcta #}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0"> {# px-0 para alinear mejor #}
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{% url 'admin_pedido_detalle' pedido.pk %}" class="text-decoration-none">
+                                        Pedido #{{ pedido.numero_pedido }}
+                                    </a>
+                                    - <span class="badge {% if pedido.estado == 'confirmado' %}bg-info{% else %}bg-warning text-dark{% endif %} rounded-pill">{{ pedido.get_estado_display }}</span>
+                                </h6>
+                                <small class="text-muted">Cliente: {{ pedido.cliente.username }} | Total: ${{ pedido.total|floatformat:0 }}</small>
+                            </div>
+                            <a href="{% url 'admin_pedido_detalle' pedido.pk %}" class="btn btn-sm btn-outline-primary">Ver</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-check-circle fa-3x mb-3 d-block"></i>
+                        <h4>No hay pedidos pendientes</h4>
+                        <p>¡Todo está al día!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctxVentas = document.getElementById('ventasSemanaChart');
+        if (ctxVentas) {
+            // Obtenemos los datos REALES que pasamos desde views.py
+            const chartLabels = {{ chart_labels|safe }}; // <-- DATO REAL
+            const chartData = {{ chart_data|safe }};   // <-- DATO REAL
+
+            new Chart(ctxVentas, {
+                type: 'line',
+                data: {
+                    labels: chartLabels, // <-- USA DATO REAL
+                    datasets: [{
+                        label: 'Ventas ($)',
+                        data: chartData, // <-- USA DATO REAL
+                        borderColor: 'rgb(255, 107, 53)',
+                        backgroundColor: 'rgba(255, 107, 53, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                           beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000) { return '$' + (value / 1000).toFixed(1) + 'k'; }
+                                    return '$' + value;
+                                }
+                            }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

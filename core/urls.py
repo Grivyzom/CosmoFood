@@ -26,11 +26,16 @@ urlpatterns = [
     path('carrito/actualizar/', views.actualizar_cantidad_carrito_view, name='actualizar_carrito'),
     path('carrito/eliminar/', views.eliminar_item_carrito_view, name='eliminar_item_carrito'),
     
-    # Admin
-    path('admin/productos/', views.admin_productos_lista, name='admin_productos_lista'),
-    path('admin/productos/crear/', views.admin_producto_crear, name='admin_producto_crear'),
-    path('admin/productos/<int:pk>/editar/', views.admin_producto_editar, name='admin_producto_editar'),
-    path('admin/productos/<int:pk>/desactivar/', views.admin_producto_desactivar, name='admin_producto_desactivar'),
-    path('admin/pedidos/', views.admin_pedidos_lista_view, name='admin_pedidos_lista'),
-    path('admin/pedidos/<int:pk>/', views.admin_pedido_detalle_view, name='admin_pedido_detalle'),
+    # Dashboard principal del admin
+    path('panel/', views.admin_dashboard_view, name='admin_dashboard'),
+
+    # Gestión de Productos (CRUD)
+    path('panel/productos/', views.admin_productos_lista, name='admin_productos_lista'),
+    path('panel/productos/crear/', views.admin_producto_crear, name='admin_producto_crear'),
+    path('panel/productos/<int:pk>/editar/', views.admin_producto_editar, name='admin_producto_editar'),
+    path('panel/productos/<int:pk>/desactivar/', views.admin_producto_desactivar, name='admin_producto_desactivar'),
+
+    # Gestión de Pedidos
+    path('panel/pedidos/', views.admin_pedidos_lista_view, name='admin_pedidos_lista'),
+    path('panel/pedidos/<int:pk>/', views.admin_pedido_detalle_view, name='admin_pedido_detalle'),
 ]

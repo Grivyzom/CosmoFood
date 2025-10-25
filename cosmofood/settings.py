@@ -94,7 +94,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
-        'PORT': '3307',
+        'PORT': '3306',
         # Add these options below
         'OPTIONS': {
             'sql_mode': 'STRICT_TRANS_TABLES',
@@ -154,3 +154,7 @@ AUTH_USER_MODEL = 'core.Usuario'
 # Configuración de archivos media (imágenes)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Le dice a Django cuál es la URL de tu página de login
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
