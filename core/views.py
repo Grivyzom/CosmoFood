@@ -5,11 +5,12 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.contrib import messages
 from django.db import models
+from django.db import transaction
 from .forms import ( 
-    RegistroForm, LoginForm, PerfilForm, ProductoForm, 
+    RegistroForm, LoginForm, PerfilForm, ProductoForm,
     RecuperarPasswordForm, ResetPasswordForm
 )
-from .models import Carrito, Producto, Usuario, Categoria, ItemCarrito, Pedido, Slide
+from .models import Carrito, Producto, Usuario, Categoria, ItemCarrito, Pedido, Slide,MetodoPago, DetallePedido
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -343,14 +344,14 @@ def eliminar_item_carrito_view(request):
 
 @login_required
 def admin_dashboard_view(request):
-    """Muestra el panel principal del administrador con estadísticas."""
+    """Muestra el panel principal del administrador con estadísticas clave."""
     if request.user.rol != 'administrador':
         messages.error(request, 'No tienes permisos para acceder aquí.')
         return redirect('home')
 
-    # --- Cálculos para las 4 Tarjetas ---
+    # --- Cálculos para las Tarjetas KPI ---
     today = timezone.now().date()
-    
+
     # 1. Ventas de Hoy
     ventas_hoy = Pedido.objects.filter(
         fecha_creacion__date=today,
@@ -365,35 +366,37 @@ def admin_dashboard_view(request):
 
     # 4. Productos Activos
     total_productos_activos = Producto.objects.filter(activo=True).count()
-    
-    # 5. (Bonus) Pedidos pendientes para la lista
+
+    # 5. Pedidos pendientes para la lista
     pedidos_recientes = Pedido.objects.filter(
         estado__in=['confirmado', 'en_preparacion']
-    ).order_by('-fecha_creacion')[:5] # 5 más recientes
+    ).order_by('-fecha_creacion')[:5] # Los 5 más recientes
 
-    # --- CÁLCULO PARA EL GRÁFICO "Ventas de la Semana" ---
-    
-    # 1. Preparamos las fechas de los últimos 7 días
+    # --- Cálculo para el Gráfico "Ventas de la Semana" ---
     dias = []
     ventas_por_dia = []
-    # Obtenemos los 7 días (desde hoy hacia atrás)
     for i in range(7):
         dia = today - timedelta(days=i)
         dias.append(dia.strftime('%a')) # 'Lun', 'Mar', 'Mié', etc.
-        
-        # 2. Calculamos las ventas para ESE día
         ventas_dia = Pedido.objects.filter(
             fecha_creacion__date=dia,
             estado__in=['confirmado', 'en_preparacion', 'listo', 'en_camino', 'entregado']
         ).aggregate(total=Sum('total'))['total'] or 0
-        
-        ventas_por_dia.append(float(ventas_dia)) # Convertimos a float para JS
-
-    # 3. Invertimos las listas para que el gráfico muestre del más antiguo al más nuevo
+        ventas_por_dia.append(float(ventas_dia))
     dias.reverse()
     ventas_por_dia.reverse()
-    # --- Fin del cálculo del gráfico ---
 
+    # --- NUEVO CÁLCULO: Productos Más Vendidos Hoy ---
+    detalles_hoy = DetallePedido.objects.filter(
+        pedido__fecha_creacion__date=today,
+        pedido__estado__in=['confirmado', 'en_preparacion', 'listo', 'en_camino', 'entregado']
+    )
+    productos_populares_hoy = detalles_hoy.values('producto__nombre') \
+                                          .annotate(cantidad_vendida=Sum('cantidad')) \
+                                          .order_by('-cantidad_vendida')[:5]
+    # --- FIN NUEVO CÁLCULO ---
+
+    # Contexto para la plantilla
     contexto = {
         'ventas_hoy': ventas_hoy,
         'pedidos_hoy': pedidos_hoy,
@@ -401,13 +404,13 @@ def admin_dashboard_view(request):
         'total_productos_activos': total_productos_activos,
         'pedidos_recientes': pedidos_recientes,
         'titulo': 'Dashboard',
-        
-        # 4. Pasamos los datos del gráfico a la plantilla
-        # Usamos json.dumps para pasar la lista de Python a un array de JavaScript
+        # Datos para gráfico de ventas
         'chart_labels': json.dumps(dias),
         'chart_data': json.dumps(ventas_por_dia),
+        # --- NUEVA VARIABLE AÑADIDA ---
+        'productos_populares': productos_populares_hoy,
     }
-    
+
     return render(request, 'core/admin/dashboard.html', contexto)
 
 
@@ -619,3 +622,114 @@ def admin_pedido_detalle_view(request, pk):
         'estados_posibles': Pedido.ESTADO_CHOICES,
     }
     return render(request, 'core/admin/pedido_detalle.html', contexto)
+
+# (Asegúrate de tener estas importaciones al principio de views.py)
+# from django.contrib.auth import get_user_model
+# from django.db import transaction
+# from .models import Pedido, Producto, DetallePedido, MetodoPago, Categoria, Usuario # Asegúrate que Usuario esté importado
+# import json
+# Usuario = get_user_model() # O usa la importación directa si prefieres
+
+# ========== PUNTO DE VENTA (POS - HU24, HU25) ==========
+
+@login_required
+def pos_view(request):
+    """Muestra la interfaz del Punto de Venta y procesa ventas locales."""
+    # Solo Cajero o Administrador pueden acceder
+    if request.user.rol not in ['cajero', 'administrador']:
+        messages.error(request, 'No tienes permisos para acceder al POS.')
+        return redirect('home')
+
+    if request.method == 'POST':
+        # --- Procesar la Venta ---
+        try:
+            # Recuperar datos enviados por JavaScript
+            items_json = request.POST.get('items')
+            total_venta = float(request.POST.get('total', 0))
+            metodo_pago_nombre = request.POST.get('metodo_pago')
+            # Obtener nombre de referencia del input opcional
+            nombre_referencia = request.POST.get('nombre_referencia', '')
+
+            # Validaciones básicas de datos recibidos
+            if not items_json or total_venta <= 0 or not metodo_pago_nombre:
+                messages.error(request, 'Faltan datos para registrar la venta.')
+                return redirect('pos_view')
+
+            items = json.loads(items_json)
+
+            # Buscamos o creamos el método de pago local
+            metodo_pago_obj, created = MetodoPago.objects.get_or_create(
+                nombre=metodo_pago_nombre,
+                defaults={'tipo': 'local', 'activo': True}
+            )
+
+            # Usamos una transacción para asegurar que todo se guarde correctamente o nada
+            with transaction.atomic():
+                # --- Obtener Usuario Genérico ---
+                try:
+                    # Busca el usuario con username 'clientelocal'
+                    usuario_generico = Usuario.objects.get(username='clientelocal')
+                except Usuario.DoesNotExist:
+                    # Si no existe, muestra advertencia y usa al usuario logueado como fallback
+                    messages.warning(request, "Usuario 'clientelocal' no encontrado. Asignando pedido al usuario actual.")
+                    usuario_generico = request.user
+                # --- Fin Obtener Usuario ---
+
+                # Crear el objeto Pedido en la base de datos
+                nuevo_pedido = Pedido.objects.create(
+                    cliente=usuario_generico,                 # <-- USA USUARIO GENÉRICO
+                    nombre_referencia_cliente=nombre_referencia, # <-- GUARDA NOMBRE REFERENCIA
+                    metodo_pago=metodo_pago_obj,
+                    tipo_orden='local',                       # Tipo de orden para POS
+                    estado='en_preparacion',                  # <-- ESTADO INICIAL CORRECTO
+                    subtotal=total_venta,                     # Asume que el total JS es el subtotal
+                    costo_envio=0,                            # Sin costo de envío para POS
+                    total=total_venta,                        # Total igual a subtotal
+                )
+
+                # Crear los Detalles del Pedido y descontar stock para cada item
+                for item_data in items:
+                    producto = Producto.objects.select_for_update().get(pk=item_data['id'])
+                    cantidad = int(item_data['cantidad'])
+
+                    if producto.stock < cantidad:
+                        raise ValueError(f"Stock insuficiente para {producto.nombre}")
+
+                    DetallePedido.objects.create(
+                        pedido=nuevo_pedido,
+                        producto=producto,
+                        cantidad=cantidad,
+                        precio_unitario=producto.precio,
+                    )
+                    producto.stock -= cantidad
+                    producto.save()
+
+            messages.success(request, f'Venta #{nuevo_pedido.numero_pedido} registrada exitosamente.')
+            return redirect('pos_view') # Redirige de vuelta al POS
+
+        # --- Manejo de Errores Específicos ---
+        except Producto.DoesNotExist:
+            messages.error(request, 'Error: Uno de los productos seleccionados ya no existe.')
+            return redirect('pos_view')
+        except ValueError as e:
+             messages.error(request, f'Error al registrar venta: {e}')
+             return redirect('pos_view')
+        except Usuario.DoesNotExist:
+             messages.error(request, "Error crítico: No se pudo asignar un cliente al pedido. Contacta al administrador.")
+             return redirect('pos_view')
+        except Exception as e:
+            messages.error(request, f'Error inesperado al registrar venta: {e}')
+            return redirect('pos_view')
+
+    # --- Si la petición es GET (Mostrar la interfaz) ---
+    else:
+        productos_pos = Producto.objects.filter(activo=True, stock__gt=0).select_related('categoria').order_by('categoria__nombre', 'nombre')
+        categorias_pos = Categoria.objects.filter(activo=True, productos__in=productos_pos).distinct().order_by('nombre')
+
+        contexto = {
+            'productos_pos': productos_pos,
+            'categorias_pos': categorias_pos,
+            'titulo': 'Punto de Venta (POS)'
+        }
+        # Asegúrate que el nombre de la plantilla sea correcto ('pos.html' o 'pos_view.html')
+        return render(request, 'core/admin/pos.html', contexto)

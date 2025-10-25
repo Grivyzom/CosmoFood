@@ -13,7 +13,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6>Ventas Hoy</h6>
-                        {# USA LA VARIABLE REAL #}
+                        {# Variable real de la vista #}
                         <h2>${{ ventas_hoy|floatformat:0 }}</h2>
                         <small>Total de ingresos del día</small>
                     </div>
@@ -29,7 +29,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6>Pedidos Hoy</h6>
-                        {# USA LA VARIABLE REAL #}
+                        {# Variable real de la vista #}
                         <h2>{{ pedidos_hoy }}</h2>
                         <small>Órdenes recibidas</small>
                     </div>
@@ -45,7 +45,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6>Clientes Total</h6>
-                        {# USA LA VARIABLE REAL #}
+                        {# Variable real de la vista #}
                         <h2>{{ total_clientes }}</h2>
                         <small>Usuarios registrados</small>
                     </div>
@@ -61,7 +61,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6>Productos Activos</h6>
-                        {# USA LA VARIABLE REAL #}
+                        {# Variable real de la vista #}
                         <h2>{{ total_productos_activos }}</h2>
                         <small>Disponibles en el menú</small>
                     </div>
@@ -86,19 +86,33 @@
     <div class="col-lg-4 mb-4">
         <div class="card table-card h-100">
             <div class="card-header bg-white border-0 py-3">
-                <h5 class="card-title mb-0"><i class="fas fa-pizza-slice text-primary me-2"></i>Productos Populares</h5>
+                 {# Título actualizado #}
+                <h5 class="card-title mb-0"><i class="fas fa-star text-primary me-2"></i>Más Vendidos Hoy</h5>
             </div>
-            <div class="card-body d-flex align-items-center justify-content-center">
-                <div class="text-muted text-center">
-                    <i class="fas fa-chart-pie fa-3x mb-2"></i>
-                    <p>(Gráfico de Dona)</p>
-                </div>
-                {# Aquí iría tu gráfico de dona (Chart.js) #}
+            <div class="card-body p-3"> {# Menos padding para ajustar la lista #}
+                {# Verifica si hay productos populares hoy #}
+                {% if productos_populares %}
+                    <ul class="list-group list-group-flush">
+                        {# Itera sobre la lista de productos populares enviada desde la vista #}
+                        {% for item in productos_populares %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-1">
+                                {# Muestra ranking, nombre y cantidad vendida #}
+                                <span class="fw-medium">{{ forloop.counter }}. {{ item.producto__nombre }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ item.cantidad_vendida }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    {# Mensaje si no hay ventas hoy #}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
+                        <small>Aún no hay ventas hoy.</small>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
-
+    </div>
 <div class="row">
      <div class="col-lg-6 mb-4">
         <div class="card table-card h-100">
@@ -122,7 +136,13 @@
                             <span>Agregar Producto</span>
                         </a>
                     </div>
-                    {# Puedes añadir más acciones rápidas aquí si quieres #}
+                     <div class="col-6">
+                        <a href="{% url 'pos_view' %}" class="btn quick-action w-100 p-3 text-decoration-none d-block text-center">
+                            <i class="fas fa-cash-register fa-2x d-block mb-2"></i>
+                            <span>Ir al POS</span>
+                        </a>
+                    </div>
+                    {# Espacio para otro botón si se necesita #}
                 </div>
             </div>
         </div>
@@ -133,10 +153,12 @@
                 <h5 class="card-title mb-0"><i class="fas fa-exclamation-circle text-primary me-2"></i>Pedidos Pendientes</h5>
             </div>
             <div class="card-body">
-                {% if pedidos_recientes %} {# Usa la variable correcta #}
+                {# Verifica si hay pedidos recientes pendientes #}
+                {% if pedidos_recientes %}
                     <ul class="list-group list-group-flush">
-                        {% for pedido in pedidos_recientes %} {# Usa la variable correcta #}
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0"> {# px-0 para alinear mejor #}
+                        {# Itera sobre los pedidos recientes enviados desde la vista #}
+                        {% for pedido in pedidos_recientes %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                             <div>
                                 <h6 class="mb-1">
                                     <a href="{% url 'admin_pedido_detalle' pedido.pk %}" class="text-decoration-none">
@@ -151,6 +173,7 @@
                         {% endfor %}
                     </ul>
                 {% else %}
+                    {# Mensaje si no hay pedidos pendientes #}
                     <div class="text-center text-muted py-5">
                         <i class="fas fa-check-circle fa-3x mb-3 d-block"></i>
                         <h4>No hay pedidos pendientes</h4>
@@ -168,42 +191,45 @@
     document.addEventListener('DOMContentLoaded', function() {
         const ctxVentas = document.getElementById('ventasSemanaChart');
         if (ctxVentas) {
-            // Obtenemos los datos REALES que pasamos desde views.py
-            const chartLabels = {{ chart_labels|safe }}; // <-- DATO REAL
-            const chartData = {{ chart_data|safe }};   // <-- DATO REAL
+            // Obtiene los datos REALES del gráfico de ventas desde la vista
+            const chartLabels = {{ chart_labels|safe }};
+            const chartData = {{ chart_data|safe }};
 
+            // Crea el gráfico de línea
             new Chart(ctxVentas, {
                 type: 'line',
                 data: {
-                    labels: chartLabels, // <-- USA DATO REAL
+                    labels: chartLabels,
                     datasets: [{
                         label: 'Ventas ($)',
-                        data: chartData, // <-- USA DATO REAL
-                        borderColor: 'rgb(255, 107, 53)',
-                        backgroundColor: 'rgba(255, 107, 53, 0.2)',
+                        data: chartData,
+                        borderColor: 'rgb(255, 107, 53)', // Naranja
+                        backgroundColor: 'rgba(255, 107, 53, 0.2)', // Naranja suave
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4 // Curva suave
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { legend: { display: false } }, // Oculta leyenda
                     scales: {
                         y: {
-                           beginAtZero: true,
+                           beginAtZero: true, // Eje Y empieza en 0
                             ticks: {
+                                // Formato para mostrar miles como 'k'
                                 callback: function(value) {
                                     if (value >= 1000) { return '$' + (value / 1000).toFixed(1) + 'k'; }
                                     return '$' + value;
                                 }
                             }
                         },
-                        x: { grid: { display: false } }
+                        x: { grid: { display: false } } // Oculta líneas verticales grid
                     }
                 }
             });
         }
+        // Aquí podrías añadir el JS para el gráfico de dona si lo necesitaras en el futuro
     });
 </script>
 {% endblock %}

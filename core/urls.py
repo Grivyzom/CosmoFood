@@ -38,4 +38,7 @@ urlpatterns = [
     # Gestión de Pedidos
     path('panel/pedidos/', views.admin_pedidos_lista_view, name='admin_pedidos_lista'),
     path('panel/pedidos/<int:pk>/', views.admin_pedido_detalle_view, name='admin_pedido_detalle'),
+    
+    # Punto de Venta (POS)
+    path('panel/pos/', views.pos_view, name='pos_view'),
 ]
