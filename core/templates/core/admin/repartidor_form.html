@@ -4,17 +4,33 @@
 
 {% block page_title %}{{ titulo }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .header-sidebar-style {
+        background: linear-gradient(135deg, #1a1f36 0%, #0f1419 100%);
+        border: none;
+        color: white;
+    }
+    .header-sidebar-style .card-title {
+        color: white;
+    }
+    .header-sidebar-style i {
+        color: var(--bs-primary);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card table-card">
-            <div class="card-header bg-white border-0 py-3">
+            <div class="card-header header-sidebar-style py-3">
                 <h5 class="card-title mb-0">
                     {# Icono cambia si es crear o editar #}
                     {% if repartidor_usuario %}
-                        <i class="fas fa-edit text-primary me-2"></i>Editando a: {{ repartidor_usuario.username }}
+                        <i class="fas fa-edit me-2"></i>Editando a: {{ repartidor_usuario.username }}
                     {% else %}
-                        <i class="fas fa-user-plus text-primary me-2"></i>Nuevo Repartidor
+                        <i class="fas fa-user-plus me-2"></i>Nuevo Repartidor
                     {% endif %}
                 </h5>
             </div>

@@ -179,12 +179,12 @@
                                         <form action="{% url 'admin_producto_desactivar' producto.pk %}" method="POST" class="d-inline">
                                             {% csrf_token %}
                                             {% if producto.activo %}
-                                                <button type="submit" class="btn btn-outline-danger" title="Desactivar">
-                                                    <i class="fas fa-toggle-off"></i>
+                                                <button type="submit" class="btn btn-outline-success" title="Activo - Clic para desactivar">
+                                                    <i class="fas fa-toggle-on"></i>
                                                 </button>
                                             {% else %}
-                                                <button type="submit" class="btn btn-outline-success" title="Activar">
-                                                    <i class="fas fa-toggle-on"></i>
+                                                <button type="submit" class="btn btn-outline-danger" title="Inactivo - Clic para activar">
+                                                    <i class="fas fa-toggle-off"></i>
                                                 </button>
                                             {% endif %}
                                         </form>

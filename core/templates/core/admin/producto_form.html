@@ -44,9 +44,25 @@
                                         <img src="{{ producto.imagen.url }}" alt="Imagen actual" style="max-height: 100px; border-radius: 8px;">
                                     </div>
                                 {% endif %}
+                            {% elif field.field.widget.input_type == 'select' %}
+                                {# Renderizar correctamente el select con sus opciones #}
+                                <select class="form-select" name="{{ field.name }}" id="{{ field.id_for_label }}">
+                                    <option value="">Selecciona una categoría</option>
+                                    {% for choice_value, choice_label in field.field.choices %}
+                                        <option value="{{ choice_value }}" {% if field.value == choice_value or field.value|stringformat:"s" == choice_value|stringformat:"s" %}selected{% endif %}>
+                                            {{ choice_label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% elif field.field.widget.input_type == 'textarea' %}
+                                <textarea class="form-control"
+                                          name="{{ field.name }}"
+                                          id="{{ field.id_for_label }}"
+                                          rows="3"
+                                          placeholder="{{ field.label }}">{{ field.value|default:'' }}</textarea>
                             {% else %}
                                 <input type="{{ field.field.widget.input_type }}"
-                                       class="{% if field.field.widget.input_type == 'select' %}form-select{% else %}form-control{% endif %}"
+                                       class="form-control"
                                        name="{{ field.name }}"
                                        id="{{ field.id_for_label }}"
                                        value="{{ field.value|default:'' }}"

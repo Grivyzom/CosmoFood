@@ -22,47 +22,177 @@
 
         /* Sidebar */
         .sidebar {
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            background: linear-gradient(180deg, #1a1f36 0%, #0f1419 100%);
             min-height: 100vh; width: var(--sidebar-width); position: fixed;
             top: 0; left: 0; z-index: 1050; transition: left 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
+        
         .sidebar-brand { 
             color: var(--bs-primary) !important; 
-            font-weight: 700; 
-            font-size: 1.5rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: 800; 
+            font-size: 1.6rem;
+            text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+            letter-spacing: -0.5px;
+            transition: all 0.3s ease;
         }
+        .sidebar-brand:hover {
+            transform: scale(1.02);
+            text-shadow: 0 0 30px rgba(255, 107, 53, 0.7);
+        }
+        
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.75); 
-            padding: 13px 20px;
-            margin: 3px 12px; 
-            border-radius: 10px; 
-            transition: all 0.2s ease;
+            color: rgba(255, 255, 255, 0.7); 
+            padding: 14px 20px;
+            margin: 4px 16px; 
+            border-radius: 12px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 500;
+            font-size: 0.95rem;
+            position: relative;
+            overflow: hidden;
         }
+        
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--bs-primary);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            border-radius: 0 4px 4px 0;
+        }
+        
         .sidebar .nav-link:hover { 
-            background: rgba(255, 107, 53, 0.12); 
+            background: rgba(255, 107, 53, 0.15); 
             color: #fff;
-            padding-left: 25px;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
         }
+        
+        .sidebar .nav-link:hover::before {
+            transform: scaleY(1);
+        }
+        
         .sidebar .nav-link.active {
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.1));
-            color: var(--bs-primary);
-            border-left: 3px solid var(--bs-primary);
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.25), rgba(255, 107, 53, 0.15));
+            color: #fff;
             font-weight: 600;
+            box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
-        .sidebar .nav-link i.fa-fw { width: 20px; }
+        
+        .sidebar .nav-link.active::before {
+            transform: scaleY(1);
+        }
+        
+        .sidebar .nav-link.active i {
+            color: var(--bs-primary);
+            transform: scale(1.1);
+        }
+        
+        .sidebar .nav-link i.fa-fw { 
+            width: 24px; 
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+        
+        .sidebar .client-view-link {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.15));
+            border: 1px solid rgba(52, 152, 219, 0.4);
+            color: #5dade2 !important;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar .client-view-link::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .sidebar .client-view-link:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .sidebar .client-view-link:hover {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.35), rgba(41, 128, 185, 0.25));
+            border-color: rgba(52, 152, 219, 0.6);
+            color: #4fc3f7 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
         
         .sidebar .logout-link {
-            background-color: rgba(220, 53, 69, 0.1);
-            border: 1px solid rgba(220, 53, 69, 0.2);
-            color: #ff6b6b !important;
+            background: linear-gradient(135deg, rgba(239, 83, 80, 0.2), rgba(229, 57, 53, 0.15));
+            border: 1px solid rgba(239, 83, 80, 0.4);
+            color: #ff8a80 !important;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2);
+            position: relative;
+            overflow: hidden;
         }
+        
+        .sidebar .logout-link::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .sidebar .logout-link:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+        
         .sidebar .logout-link:hover {
-            background-color: rgba(220, 53, 69, 0.2);
+            background: linear-gradient(135deg, rgba(239, 83, 80, 0.35), rgba(229, 57, 53, 0.25));
+            border-color: rgba(239, 83, 80, 0.6);
             color: #ff5252 !important;
-            padding-left: 20px;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 83, 80, 0.4);
+        }
+        
+        /* Decoración del sidebar */
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 107, 53, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(52, 152, 219, 0.08) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         /* Main Content */
@@ -129,6 +259,7 @@
             border-color: var(--bs-primary) !important;
             font-weight: 600;
             transition: all 0.2s ease;
+            border-radius: 12px;
         }
         .btn-primary:hover {
             background-color: var(--bs-primary-dark) !important; 
@@ -137,19 +268,87 @@
             box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
         }
         
+        .btn-secondary {
+            border-radius: 12px;
+        }
+        
+        .btn-success {
+            border-radius: 12px;
+        }
+        
+        .btn-danger {
+            border-radius: 12px;
+        }
+        
+        .btn-warning {
+            border-radius: 12px;
+        }
+        
+        .btn-info {
+            border-radius: 12px;
+        }
+        
+        .btn-light {
+            border-radius: 12px;
+        }
+        
+        .btn-dark {
+            border-radius: 12px;
+        }
+        
+        .btn-sm {
+            border-radius: 10px;
+        }
+        
+        .btn-lg {
+            border-radius: 14px;
+        }
+        
         .btn-check:checked + .btn-outline-primary.rounded-pill,
         .btn-primary.rounded-pill {
             background-color: var(--bs-primary) !important; 
             border-color: var(--bs-primary) !important;
+            color: white !important; /* Texto blanco cuando está seleccionado */
+            border-radius: 50rem !important;
+        }
+        .btn-check:checked + .btn-outline-primary.rounded-pill:hover {
+            color: white !important;
         }
         .btn-outline-primary { 
             color: var(--bs-primary) !important; 
             border-color: var(--bs-primary) !important; 
             font-weight: 500;
+            border-radius: 12px;
         }
         .btn-outline-primary:hover { 
             background-color: var(--bs-primary) !important; 
-            border-color: var(--bs-primary) !important; 
+            border-color: var(--bs-primary) !important;
+            color: white !important; /* Texto blanco en hover */
+        }
+        
+        .btn-outline-secondary {
+            border-radius: 12px;
+        }
+        
+        .btn-outline-success {
+            border-radius: 12px;
+        }
+        
+        .btn-outline-danger {
+            border-radius: 12px;
+        }
+        
+        /* Clases especiales de Bootstrap que usan rounded-pill */
+        .rounded-pill {
+            border-radius: 50rem !important;
+        }
+        
+        .rounded-circle {
+            border-radius: 50% !important;
+        }
+        
+        .rounded-3 {
+            border-radius: 12px !important;
         }
         
         .quick-action {
@@ -214,40 +413,43 @@
 </head>
 <body>
     <div class="sidebar d-flex flex-column" id="sidebar">
-        <div class="p-4 border-bottom border-secondary">
-            <a class="sidebar-brand d-flex align-items-center text-decoration-none mb-1" href="{% url 'admin_dashboard' %}">
-                <i class="fas fa-utensils me-2"></i>
+        <div class="p-4 border-bottom" style="border-color: rgba(255, 255, 255, 0.08) !important; background: rgba(0,0,0,0.2);">
+            <a class="sidebar-brand d-flex align-items-center text-decoration-none mb-2" href="{% url 'admin_dashboard' %}">
+                <i class="fas fa-utensils me-2" style="font-size: 1.8rem;"></i>
                 <span>Cosmofood</span>
             </a>
-            <small class="text-white-50 fw-light">Panel Administrativo</small>
+            <small class="text-white-50 fw-light d-block" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                <i class="fas fa-shield-alt me-1" style="font-size: 0.7rem;"></i>Panel Administrativo
+            </small>
         </div>
 
-        <nav class="nav flex-column flex-grow-1 py-3">
+        <nav class="nav flex-column flex-grow-1 py-4">
             <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
-                <i class="fas fa-tachometer-alt fa-fw me-2"></i>Dashboard
+                <i class="fas fa-tachometer-alt fa-fw me-3"></i>Dashboard
             </a>
             <a class="nav-link {% if 'pedido' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_pedidos_lista' %}">
-                <i class="fas fa-clipboard-list fa-fw me-2"></i>Pedidos
+                <i class="fas fa-clipboard-list fa-fw me-3"></i>Pedidos
             </a>
             <a class="nav-link {% if 'producto' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_productos_lista' %}">
-                <i class="fas fa-box fa-fw me-2"></i>Productos
+                <i class="fas fa-box fa-fw me-3"></i>Productos
             </a>
             <a class="nav-link {% if request.resolver_match.url_name == 'pos_view' %}active{% endif %}" href="{% url 'pos_view' %}">
-                <i class="fas fa-cash-register fa-fw me-2"></i>Punto de Venta
+                <i class="fas fa-cash-register fa-fw me-3"></i>Punto de Venta
             </a>
             <a class="nav-link {% if 'repartidor' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_repartidores_lista' %}">
-                <i class="fas fa-motorcycle fa-fw me-2"></i>Repartidores
+                <i class="fas fa-motorcycle fa-fw me-3"></i>Repartidores
+            </a>
             <a class="nav-link {% if 'reclamo' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_reclamos_lista' %}">
-                <i class="fas fa-comment-dots fa-fw me-2"></i>Reclamos
+                <i class="fas fa-comment-dots fa-fw me-3"></i>Reclamos
             </a>
         </nav>
 
-        <div class="p-3 border-top border-secondary">
-            <a class="nav-link logout-link rounded-3 mb-2 text-center" href="{% url 'logout' %}">
-                <i class="fas fa-sign-out-alt fa-fw me-2"></i>Cerrar Sesión
+        <div class="p-3 border-top" style="border-color: rgba(255, 255, 255, 0.08) !important; background: rgba(0,0,0,0.15);">
+            <a class="nav-link client-view-link rounded-3 mb-2 text-center py-3" href="{% url 'home' %}" target="_blank" title="Ver sitio desde perspectiva del cliente">
+                <i class="fas fa-external-link-alt fa-fw me-2"></i>Vista Cliente
             </a>
-            <a class="nav-link text-center text-white-50" href="{% url 'home' %}" target="_blank" title="Abrir sitio cliente">
-                <i class="fas fa-globe fa-fw me-2"></i><small>Ver Sitio Cliente</small>
+            <a class="nav-link logout-link rounded-3 mb-1 text-center py-3" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt fa-fw me-2"></i>Cerrar Sesión
             </a>
         </div>
     </div>
@@ -262,6 +464,10 @@
                 </button>
                 <h4 class="mb-0 fw-bold me-auto text-dark">{% block page_title %}Dashboard{% endblock %}</h4>
                 <div class="d-flex align-items-center gap-3">
+                    <a href="{% url 'home' %}" target="_blank" class="btn btn-outline-primary rounded-pill px-3 py-2 d-none d-md-flex align-items-center" title="Ver sitio desde perspectiva del cliente">
+                        <i class="fas fa-store me-2"></i>
+                        <span class="small fw-semibold">Ver Sitio Cliente</span>
+                    </a>
                     <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2">
                         <i class="fas fa-circle me-1" style="font-size: 0.5em;"></i>En línea
                     </span>

@@ -4,12 +4,28 @@
 
 {% block page_title %}Detalle del Reclamo #{{ reclamo.id }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .header-sidebar-style {
+        background: linear-gradient(135deg, #1a1f36 0%, #0f1419 100%);
+        border: none;
+        color: white;
+    }
+    .header-sidebar-style .card-title {
+        color: white;
+    }
+    .header-sidebar-style i {
+        color: var(--bs-primary);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-lg-7 mb-4">
         <div class="card table-card mb-4">
-            <div class="card-header bg-white border-0 py-3">
-                <h5 class="card-title mb-0"><i class="fas fa-file-alt text-primary me-2"></i>Información del Reclamo</h5>
+            <div class="card-header header-sidebar-style py-3">
+                <h5 class="card-title mb-0"><i class="fas fa-file-alt me-2"></i>Información del Reclamo</h5>
             </div>
             <div class="card-body p-4">
                 <dl class="row mb-0">
@@ -41,8 +57,8 @@
 
         {% if reclamo.respuesta %}
         <div class="card table-card mb-4">
-            <div class="card-header bg-light border-0 py-3">
-                <h5 class="card-title mb-0"><i class="fas fa-reply text-secondary me-2"></i>Respuesta Anterior</h5>
+            <div class="card-header header-sidebar-style py-3">
+                <h5 class="card-title mb-0"><i class="fas fa-reply me-2"></i>Respuesta Anterior</h5>
             </div>
             <div class="card-body p-4">
                  <dl class="row mb-0">
@@ -62,7 +78,7 @@
 
     <div class="col-lg-5 mb-4">
         <div class="card table-card sticky-top" style="top: 80px;">
-            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, var(--bs-primary), var(--bs-orange, #f39c12));">
+            <div class="card-header header-sidebar-style py-3">
                 <h5 class="card-title mb-0 fw-bold">
                     <i class="fas fa-edit me-2"></i>Actualizar / Responder Reclamo
                 </h5>
