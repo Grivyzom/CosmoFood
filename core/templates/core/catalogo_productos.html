@@ -6,7 +6,8 @@
 {% block content %}
 <div class="container mx-auto px-4 my-12">
     
-    <!-- Sección de Categorías -->
+    <!-- Sección de Categorías (solo se muestra si NO hay filtros activos) -->
+    {% if not categoria_seleccionada and not busqueda and not request.GET.ver_todo %}
     <div class="mb-12">
         <h1 class="text-4xl font-bold text-gray-800 mb-3 text-center">Nuestro Menú</h1>
         <p class="text-gray-600 text-center mb-8">Selecciona una categoría para explorar nuestros deliciosos productos</p>
@@ -14,7 +15,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
             <!-- Tarjeta Ver Todo -->
             <a href="?ver_todo=true" 
-               class="bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-lg hover:shadow-2xl p-8 text-center transition duration-300 transform hover:scale-105 hover:-translate-y-2 {% if request.GET.ver_todo %}ring-4 ring-yellow-400{% endif %}">
+               class="bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-lg hover:shadow-2xl p-8 text-center transition duration-300 transform hover:scale-105 hover:-translate-y-2">
                 <div class="text-6xl mb-4">
                     🍽️
                 </div>
@@ -24,7 +25,7 @@
             
             {% for cat in categorias %}
                 <a href="?categoria={{ cat.id }}" 
-                   class="bg-white rounded-2xl shadow-lg hover:shadow-2xl p-8 text-center transition duration-300 transform hover:scale-105 hover:-translate-y-2 {% if categoria_seleccionada == cat.id|stringformat:'s' %}ring-4 ring-primary bg-gradient-to-br from-orange-50 to-orange-100{% endif %}">
+                   class="bg-white rounded-2xl shadow-lg hover:shadow-2xl p-8 text-center transition duration-300 transform hover:scale-105 hover:-translate-y-2">
                     <div class="text-6xl mb-4">
                         {% if cat.nombre == "Hamburguesas" %}
                             🍔
@@ -54,6 +55,7 @@
             {% endfor %}
         </div>
     </div>
+    {% endif %}
 
     {% if categoria_seleccionada or busqueda or request.GET.ver_todo %}
     <!-- Solo mostrar esta sección si hay una categoría seleccionada, búsqueda activa o ver todo -->
