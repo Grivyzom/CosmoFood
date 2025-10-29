@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.contrib import messages
 from django.db import models
 from django.db import transaction
+from django.http import JsonResponse
 from .forms import ( 
     RegistroForm, LoginForm, PerfilForm, ProductoForm,
     RecuperarPasswordForm, ResetPasswordForm
@@ -22,7 +23,7 @@ from django.db.models import Sum
 from datetime import timedelta
 import json
 
-# Vista de inicio (landing page)
+
 def home(request):
     slides = Slide.objects.filter(activo=True).order_by('orden')
     contexto = {
@@ -30,15 +31,12 @@ def home(request):
     }
     return render(request, 'core/home.html', contexto)
 
-# ========== CATÁLOGO DE PRODUCTOS (CLIENTE) ==========
 
 def catalogo_productos_view(request):
     """Vista para que los clientes y visitantes vean el catálogo de productos (HU10)"""
     
-    # Inicialmente no mostramos productos (solo categorías)
     productos = Producto.objects.none()
     
-    # Búsqueda
     busqueda = request.GET.get('q', '')
     
     # Filtro por categoría
@@ -351,6 +349,27 @@ def admin_dashboard_view(request):
         messages.error(request, 'No tienes permisos para acceder aquí.')
         return redirect('home')
 
+    # --- Manejo de Creación de Categoría desde el Modal ---
+    if request.method == 'POST' and request.POST.get('action') == 'crear_categoria':
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        activo = request.POST.get('activo') == 'on'
+        
+        if nombre:
+            try:
+                Categoria.objects.create(
+                    nombre=nombre,
+                    descripcion=descripcion if descripcion else None,
+                    activo=activo
+                )
+                messages.success(request, f'La categoría "{nombre}" ha sido creada exitosamente.')
+            except Exception as e:
+                messages.error(request, f'Error al crear la categoría: {str(e)}')
+        else:
+            messages.error(request, 'El nombre de la categoría es obligatorio.')
+        
+        return redirect('admin_dashboard')
+
     # --- Cálculos para las Tarjetas KPI ---
     today = timezone.now().date()
 
@@ -375,11 +394,19 @@ def admin_dashboard_view(request):
     ).order_by('-fecha_creacion')[:5] # Los 5 más recientes
 
     # --- Cálculo para el Gráfico "Ventas de la Semana" ---
+    # Diccionario para traducir días al español
+    dias_espanol = {
+        'Mon': 'Lun', 'Tue': 'Mar', 'Wed': 'Mié', 
+        'Thu': 'Jue', 'Fri': 'Vie', 'Sat': 'Sáb', 'Sun': 'Dom'
+    }
+    
     dias = []
     ventas_por_dia = []
     for i in range(7):
         dia = today - timedelta(days=i)
-        dias.append(dia.strftime('%a')) # 'Lun', 'Mar', 'Mié', etc.
+        dia_ingles = dia.strftime('%a')  # Obtiene día en inglés (Mon, Tue, etc.)
+        dia_espanol = dias_espanol.get(dia_ingles, dia_ingles)  # Traduce al español
+        dias.append(dia_espanol)
         ventas_dia = Pedido.objects.filter(
             fecha_creacion__date=dia,
             estado__in=['confirmado', 'en_preparacion', 'listo', 'en_camino', 'entregado']
@@ -388,7 +415,6 @@ def admin_dashboard_view(request):
     dias.reverse()
     ventas_por_dia.reverse()
 
-    # --- NUEVO CÁLCULO: Productos Más Vendidos Hoy ---
     detalles_hoy = DetallePedido.objects.filter(
         pedido__fecha_creacion__date=today,
         pedido__estado__in=['confirmado', 'en_preparacion', 'listo', 'en_camino', 'entregado']
@@ -396,9 +422,11 @@ def admin_dashboard_view(request):
     productos_populares_hoy = detalles_hoy.values('producto__nombre') \
                                           .annotate(cantidad_vendida=Sum('cantidad')) \
                                           .order_by('-cantidad_vendida')[:5]
-    # --- FIN NUEVO CÁLCULO ---
+    productos_bajo_stock = Producto.objects.filter(
+        activo=True,
+        stock__lte=10
+    ).select_related('categoria').order_by('stock', 'nombre')[:10]  # Los 10 con menos stock
 
-    # Contexto para la plantilla
     contexto = {
         'ventas_hoy': ventas_hoy,
         'pedidos_hoy': pedidos_hoy,
@@ -411,6 +439,7 @@ def admin_dashboard_view(request):
         'chart_data': json.dumps(ventas_por_dia),
         # --- NUEVA VARIABLE AÑADIDA ---
         'productos_populares': productos_populares_hoy,
+        'productos_bajo_stock': productos_bajo_stock,  # Nueva variable
     }
 
     return render(request, 'core/admin/dashboard.html', contexto)
@@ -757,7 +786,9 @@ def pos_view(request):
 
     # --- Si la petición es GET (Mostrar la interfaz) ---
     else:
-        productos_pos = Producto.objects.filter(activo=True, stock__gt=0).select_related('categoria').order_by('categoria__nombre', 'nombre')
+        # Cambiado: Mostrar todos los productos activos, sin importar el stock
+        # El stock se validará al agregar al carrito
+        productos_pos = Producto.objects.filter(activo=True).select_related('categoria').order_by('categoria__nombre', 'nombre')
         categorias_pos = Categoria.objects.filter(activo=True, productos__in=productos_pos).distinct().order_by('nombre')
 
         contexto = {
@@ -977,3 +1008,45 @@ def admin_repartidor_toggle_disponible(request, pk_usuario): # Usamos PK del Usu
             messages.error(request, f'El perfil de repartidor para "{usuario_repartidor.username}" no existe.')
 
     return redirect('admin_repartidores_lista')
+
+# ========== BÚSQUEDA DE PEDIDO (AJAX) ==========
+
+@login_required
+def buscar_pedido_view(request):
+    """Busca un pedido por número de pedido o ID y devuelve su ID en JSON."""
+    if request.user.rol != 'administrador':
+        return JsonResponse({'success': False, 'error': 'Sin permisos'}, status=403)
+    
+    query = request.GET.get('q', '').strip()
+    
+    if not query:
+        return JsonResponse({'success': False, 'error': 'Parámetro de búsqueda vacío'})
+    
+    try:
+        # Intentar buscar por número de pedido primero
+        pedido = Pedido.objects.filter(numero_pedido=query).first()
+        
+        # Si no se encuentra, intentar por ID
+        if not pedido:
+            try:
+                pedido_id = int(query)
+                pedido = Pedido.objects.filter(pk=pedido_id).first()
+            except (ValueError, TypeError):
+                pass
+        
+        if pedido:
+            return JsonResponse({
+                'success': True,
+                'pedido_id': pedido.pk,
+                'numero_pedido': pedido.numero_pedido
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Pedido no encontrado'
+            })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
