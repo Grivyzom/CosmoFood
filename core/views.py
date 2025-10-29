@@ -26,8 +26,16 @@ import json
 
 def home(request):
     slides = Slide.objects.filter(activo=True).order_by('orden')
+    # Obtener productos en promoción (máximo 6 para el carrusel)
+    productos_promocion = Producto.objects.filter(
+        activo=True,
+        en_promocion=True,
+        stock__gt=0
+    ).select_related('categoria').order_by('-fecha_actualizacion')[:6]
+
     contexto = {
-        'slides': slides
+        'slides': slides,
+        'productos_promocion': productos_promocion
     }
     return render(request, 'core/home.html', contexto)
 

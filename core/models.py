@@ -47,6 +47,7 @@ class Producto(models.Model):
       stock = models.IntegerField(default=0)
       activo = models.BooleanField(default=True)
       categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='productos')
+      en_promocion = models.BooleanField(default=False, verbose_name='En Promoción')
       fecha_creacion = models.DateField(auto_now_add=True)
       fecha_actualizacion = models.DateField(auto_now=True)
       class Meta:

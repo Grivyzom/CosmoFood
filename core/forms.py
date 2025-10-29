@@ -191,7 +191,7 @@ class ResetPasswordForm(forms.Form):
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = [ 'nombre', 'descripcion', 'precio', 'imagen', 'stock', 'categoria', 'activo' ]
+        fields = [ 'nombre', 'descripcion', 'precio', 'imagen', 'stock', 'categoria', 'activo', 'en_promocion' ]
         widgets = {
                 'nombre': forms.TextInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
                 'descripcion': forms.Textarea(attrs={'class': TAILWIND_TEXTAREA_CLASSES, 'rows': 3}),
@@ -201,6 +201,7 @@ class ProductoForm(forms.ModelForm):
                 'stock': forms.NumberInput(attrs={'class': TAILWIND_INPUT_CLASSES}),
                 'categoria':forms.Select(attrs={'class': TAILWIND_SELECT_CLASSES}),
                 'activo': forms.CheckboxInput(attrs={'class': TAILWIND_CHECKBOX_CLASSES}),
+                'en_promocion': forms.CheckboxInput(attrs={'class': TAILWIND_CHECKBOX_CLASSES}),
             }
 
 class RepartidorForm(forms.Form):

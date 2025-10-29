@@ -21,10 +21,10 @@ class CategoriaAdmin(admin.ModelAdmin):
       
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-      list_display = ['nombre', 'descripcion', 'precio','stock', 'activo', 'disponible']
-      list_filter = ['categoria', 'activo']
+      list_display = ['nombre', 'descripcion', 'precio','stock', 'activo', 'en_promocion', 'disponible']
+      list_filter = ['categoria', 'activo', 'en_promocion']
       search_fields = ['nombre', 'descripcion']
-      list_editable = ['precio', 'stock', 'activo']
+      list_editable = ['precio', 'stock', 'activo', 'en_promocion']
       
 @admin.register(Repartidor)
 class RepatidorAdmin(admin.ModelAdmin):
