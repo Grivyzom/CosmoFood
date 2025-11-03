@@ -79,6 +79,12 @@
                                 <a class="block px-4 py-3 text-gray-700 hover:bg-gray-100 transition" href="{% url 'mis_pedidos' %}">
                                     <i class="fas fa-shopping-bag mr-2"></i> Mis Pedidos
                                 </a>
+                                {% if user.rol == 'repartidor' %}
+                                    <hr class="my-1">
+                                    <a class="block px-4 py-3 text-gray-700 hover:bg-gray-100 transition" href="{% url 'repartidor_pedidos' %}">
+                                        <i class="fas fa-shipping-fast mr-2"></i> Mis Entregas
+                                    </a>
+                                {% endif %}
                                 {% if user.rol == 'administrador' %}
                                     <hr class="my-1">
                                     <a class="block px-4 py-3 text-gray-700 hover:bg-gray-100 transition" href="{% url 'admin_productos_lista' %}">
@@ -126,6 +132,12 @@
                         <a class="text-white hover:text-gray-200 transition duration-200 py-2" href="{% url 'mis_pedidos' %}">
                             <i class="fas fa-shopping-bag mr-2"></i> Mis Pedidos
                         </a>
+                        {% if user.rol == 'repartidor' %}
+                            <hr class="border-white/30 my-2">
+                            <a class="text-white hover:text-gray-200 transition duration-200 py-2" href="{% url 'repartidor_pedidos' %}">
+                                <i class="fas fa-shipping-fast mr-2"></i> Mis Entregas
+                            </a>
+                        {% endif %}
                         {% if user.rol == 'administrador' %}
                             <hr class="border-white/30 my-2">
                             <a class="text-white hover:text-gray-200 transition duration-200 py-2" href="{% url 'admin_productos_lista' %}">
