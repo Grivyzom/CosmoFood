@@ -118,6 +118,8 @@ def login_view(request):
                 # Redirigir según el rol del usuario
                 if user.rol == 'administrador':
                     return redirect('admin_dashboard')
+                elif user.rol == 'repartidor':
+                    return redirect('repartidor_pedidos')
                 else:
                     return redirect('home')
             else:
@@ -1058,3 +1060,108 @@ def buscar_pedido_view(request):
             'success': False,
             'error': str(e)
         })
+
+# ========== VISTA DEL REPARTIDOR (HU18) ==========
+
+@login_required
+def repartidor_pedidos_view(request):
+    """
+    Vista para que el repartidor gestione las entregas asignadas.
+    HU18: Ver pedidos asignados y actualizar estado de entrega.
+    
+    Funcionalidades:
+    - Ver lista de pedidos asignados al repartidor
+    - Ver detalles: dirección, productos, contacto del cliente
+    - Actualizar estado: 'En preparación', 'Listo para entregar', 'En camino', 'Entregado'
+    """
+    # Validar que el usuario sea un repartidor
+    if request.user.rol != 'repartidor':
+        messages.error(request, 'No tienes permisos para acceder a esta área.')
+        return redirect('home')
+    
+    # Obtener el perfil de repartidor del usuario actual
+    try:
+        perfil_repartidor = request.user.perfil_repartidor
+    except Repartidor.DoesNotExist:
+        messages.error(request, 'No tienes un perfil de repartidor asociado. Contacta al administrador.')
+        return redirect('home')
+    
+    # Manejar actualización de estado (POST)
+    if request.method == 'POST':
+        pedido_id = request.POST.get('pedido_id')
+        nuevo_estado = request.POST.get('nuevo_estado')
+        
+        # Validar que se recibieron los datos
+        if not pedido_id or not nuevo_estado:
+            messages.error(request, 'Datos incompletos para actualizar el pedido.')
+            return redirect('repartidor_pedidos')
+        
+        # Obtener el pedido
+        try:
+            pedido = Pedido.objects.get(pk=pedido_id, repartidor=perfil_repartidor)
+            
+            # Validar que el nuevo estado sea válido para el repartidor
+            estados_permitidos = ['en_preparacion', 'listo', 'en_camino', 'entregado']
+            if nuevo_estado not in estados_permitidos:
+                messages.error(request, 'Estado no permitido.')
+                return redirect('repartidor_pedidos')
+            
+            # Actualizar el estado
+            estado_anterior = pedido.estado
+            pedido.estado = nuevo_estado
+            
+            # Actualizar timestamps según el estado
+            if nuevo_estado == 'en_preparacion' and not pedido.fecha_preparacion:
+                pedido.fecha_preparacion = timezone.now()
+            elif nuevo_estado == 'listo' and not pedido.fecha_listo:
+                pedido.fecha_listo = timezone.now()
+            elif nuevo_estado == 'entregado' and not pedido.fecha_entrega:
+                pedido.fecha_entrega = timezone.now()
+            
+            pedido.save()
+            
+            messages.success(request, f'Pedido #{pedido.numero_pedido} actualizado de "{pedido.get_estado_display()}" a "{dict(Pedido.ESTADO_CHOICES)[nuevo_estado]}".')
+            
+        except Pedido.DoesNotExist:
+            messages.error(request, 'Pedido no encontrado o no tienes permisos para modificarlo.')
+        except Exception as e:
+            messages.error(request, f'Error al actualizar el pedido: {str(e)}')
+        
+        return redirect('repartidor_pedidos')
+    
+    # Obtener pedidos asignados al repartidor (GET)
+    # Estados relevantes: confirmado, en_preparacion, listo, en_camino
+    pedidos_asignados = Pedido.objects.filter(
+        repartidor=perfil_repartidor,
+        estado__in=['confirmado', 'en_preparacion', 'listo', 'en_camino']
+    ).select_related('cliente', 'metodo_pago').prefetch_related('detalles__producto').order_by('estado', 'fecha_creacion')
+    
+    # También mostrar pedidos entregados recientes (últimas 24 horas)
+    hace_24_horas = timezone.now() - timedelta(hours=24)
+    pedidos_entregados_recientes = Pedido.objects.filter(
+        repartidor=perfil_repartidor,
+        estado='entregado',
+        fecha_entrega__gte=hace_24_horas
+    ).select_related('cliente', 'metodo_pago').prefetch_related('detalles__producto').order_by('-fecha_entrega')
+    
+    # Estadísticas para el repartidor
+    total_asignados = pedidos_asignados.count()
+    total_en_camino = pedidos_asignados.filter(estado='en_camino').count()
+    total_entregados_hoy = Pedido.objects.filter(
+        repartidor=perfil_repartidor,
+        estado='entregado',
+        fecha_entrega__date=timezone.now().date()
+    ).count()
+    
+    contexto = {
+        'pedidos_asignados': pedidos_asignados,
+        'pedidos_entregados_recientes': pedidos_entregados_recientes,
+        'total_asignados': total_asignados,
+        'total_en_camino': total_en_camino,
+        'total_entregados_hoy': total_entregados_hoy,
+        'perfil_repartidor': perfil_repartidor,
+        'titulo': 'Mis Entregas',
+        'estados_disponibles': Pedido.ESTADO_CHOICES,
+    }
+    
+    return render(request, 'core/repartidor_pedidos.html', contexto)
