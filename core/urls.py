@@ -52,6 +52,9 @@ urlpatterns = [
     path('panel/repartidores/<int:pk_usuario>/editar/', views.admin_repartidor_editar, name='admin_repartidor_editar'), 
     path('panel/repartidores/<int:pk_usuario>/toggle/', views.admin_repartidor_toggle_disponible, name='admin_repartidor_toggle'),
     
+    # Vista del Repartidor (HU18)
+    path('repartidor/pedidos/', views.repartidor_pedidos_view, name='repartidor_pedidos'),
+    
     # Búsqueda de Pedido (AJAX)
     path('panel/buscar-pedido/', views.buscar_pedido_view, name='buscar_pedido'),
 ]
